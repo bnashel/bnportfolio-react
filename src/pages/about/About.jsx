@@ -2,7 +2,7 @@ import roadImg from '../../assets/road.jpg';
 
 export default function About() {
   return (
-    <div className="bio page-content-top">
+    <div className="bio page-content-top fade-in">
       <img
         className="page-top"
         src={roadImg}
@@ -18,10 +18,10 @@ export default function About() {
         }}
       />
       <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.15em', marginBottom: '1.2rem' }}>
-        Hi, I'm Benjamin.
+        Welcome to my personal anthology
       </div>
       <div style={{ textAlign: 'left' }}>
-        Welcome to my personal anthology. I'm originally from Brooklyn and currently a student at Vanderbilt University, studying Economics and History.<br /><br />
+        I'm originally from Brooklyn and currently a student at Vanderbilt University, studying Economics and History.<br /><br />
         I attended the Packer Collegiate Institute from 2020 to 2024 and spent most of high school focused on my music tutoring nonprofit, Intune. I've played piano for over a decade and love composing music, and I started Intune wanting to share that joy with others. At the start, it was just me tutoring one student. Before I knew it, we had weekly lessons running across three continents.<br /><br />
         I also have a deep love for historical research—particularly the Boasian Circle and early cultural anthropology. I'm fascinated by how notions of culture travel across time and geography, and I've spent the past few years exploring those connections through archival research and academic writing.<br /><br />
         Now at Vanderbilt, I'm working at an AI-native marketing software startup called Enttor, where we build tools that help consumer brands scale content efficiently without losing their creative voice.<br /><br />

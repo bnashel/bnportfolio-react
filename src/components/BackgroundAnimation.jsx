@@ -3,25 +3,39 @@ import * as THREE from 'three';
 
 const BackgroundAnimation = () => {
   const containerRef = useRef(null);
+  const rendererRef = useRef(null);
+  const cameraRef = useRef(null);
 
   useEffect(() => {
     // Initialize Three.js scene
     const initScene = () => {
+      const width = containerRef.current.offsetWidth;
+      const height = containerRef.current.offsetHeight;
       const renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setClearColor(0xf5f0e6);
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(width, height);
+      renderer.domElement.style.width = '100%';
+      renderer.domElement.style.height = '100%';
+      renderer.domElement.style.position = 'absolute';
+      renderer.domElement.style.top = '0';
+      renderer.domElement.style.left = '0';
       containerRef.current.appendChild(renderer.domElement);
 
       const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-      camera.position.z = 9;
+      const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
+      camera.position.z = 5.2;
+      camera.position.y = 0;
+
+      rendererRef.current = renderer;
+      cameraRef.current = camera;
 
       return { scene, camera, renderer };
     };
 
     // Create and configure the torus mesh
     const createTorus = () => {
-      const geometry = new THREE.TorusGeometry(2, 0.5, 64, 128);
+      const geometry = new THREE.TorusGeometry(1.5, 0.35, 64, 128);
       const vertexCount = geometry.attributes.position.count;
       const initialPositions = new Float32Array(geometry.attributes.position.array);
       const colors = new Float32Array(vertexCount * 3);
@@ -128,16 +142,26 @@ const BackgroundAnimation = () => {
       };
     };
 
-    // Handle window resize
+    // Handle container resize with ResizeObserver
     const handleResize = (camera, renderer) => {
-      const handleWindowResize = () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
+      const resize = () => {
+        if (!containerRef.current) return;
+        const width = containerRef.current.offsetWidth;
+        const height = containerRef.current.offsetHeight;
+        camera.aspect = width / height;
         camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setSize(width, height, false);
+        renderer.domElement.style.width = '100%';
+        renderer.domElement.style.height = '100%';
       };
-
-      window.addEventListener('resize', handleWindowResize);
-      return () => window.removeEventListener('resize', handleWindowResize);
+      resize();
+      const observer = new window.ResizeObserver(resize);
+      observer.observe(containerRef.current);
+      window.addEventListener('resize', resize);
+      return () => {
+        observer.disconnect();
+        window.removeEventListener('resize', resize);
+      };
     };
 
     // Initialize animation
@@ -156,10 +180,12 @@ const BackgroundAnimation = () => {
     return () => {
       cleanupAnimation();
       cleanupResize();
-      if (containerRef.current) {
-        containerRef.current.removeChild(renderer.domElement);
+      if (containerRef.current && rendererRef.current) {
+        containerRef.current.removeChild(rendererRef.current.domElement);
       }
-      renderer.dispose();
+      if (rendererRef.current) {
+        rendererRef.current.dispose();
+      }
     };
   }, []);
 

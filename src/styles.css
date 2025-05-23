@@ -7,11 +7,12 @@ body {
   min-height: 100vh;
   letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 /* Layout */
 .content {
-  width: 100vw;
+  width: 100%;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -20,6 +21,7 @@ body {
   position: relative;
   padding-bottom: 2rem;
   background: transparent;
+  box-sizing: border-box;
 }
 
 /* Consistent spacing for first element on each page */
@@ -32,7 +34,7 @@ body {
   position: fixed;
   bottom: 2.5rem;
   left: 0;
-  width: 100vw;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
@@ -64,23 +66,33 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
+  width: 100%;
   background: #f5f0e6 !important;
   padding: 1rem 0;
   text-align: center;
   z-index: 3;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row !important;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  white-space: nowrap;
+  gap: 0.5rem;
 }
 
 .fixed-header a {
-  font-size: 1.2rem;
+  font-size: clamp(0.95rem, 4vw, 1.15rem);
   color: #111;
   text-decoration: underline;
-  margin: 0 1rem;
-  transition: color 0.2s ease, background 0.2s ease, transform 0.18s cubic-bezier(.4,0,.2,1);
-  padding: 0.5rem 1rem 0.3rem 1rem;
+  margin: 0 0.3rem;
+  padding: 0.5rem 0.7rem 0.3rem 0.7rem;
   border-radius: 4px;
   position: relative;
-  display: inline-block;
+  display: inline-block !important;
+  width: auto !important;
+  text-align: center;
 }
 
 .fixed-header a:hover {
@@ -106,9 +118,10 @@ body {
 
 /* Bio section */
 .bio {
-  max-width: 800px;
+  max-width: min(800px, 90%);
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 clamp(1rem, 3vw, 2rem);
+  box-sizing: border-box;
 }
 
 .bio .social-links {
@@ -165,39 +178,35 @@ body {
 }
 
 /* Home page specific */
-#animation-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 0;
-  background: #f5f0e6 !important;
-}
-
-.title {
-  position: relative;
-  z-index: 1;
-  width: 100vw;
-  font-size: 2.2rem;
-  color: #111;
-  letter-spacing: 0.04em;
-  text-align: center;
-  background: transparent;
-}
-
 .home-title-fixed {
   position: fixed;
-  top: 7rem;
+  top: 4.5rem;
   left: 0;
-  width: 100vw;
+  width: 100%;
   text-align: center;
   z-index: 2;
-  font-size: 2.2rem;
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
   color: #111;
   letter-spacing: 0.04em;
   background: transparent;
   pointer-events: none;
+  padding: 0 1rem;
+  box-sizing: border-box;
+}
+
+#animation-bg {
+  width: 100%;
+  height: 220px;
+  min-height: 140px;
+  max-height: 320px;
+  margin: 6.5rem auto 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
 }
 
 body.home-no-scroll {
@@ -207,7 +216,7 @@ body.home-no-scroll {
 /* Art page specific */
 img, .artwork-placeholder {
   width: 100%;
-  max-width: 700px;
+  max-width: min(700px, 90%);
   display: block;
   margin: 2.5rem auto 1.2rem auto;
   background: #f3f3f3;
@@ -215,6 +224,7 @@ img, .artwork-placeholder {
   min-height: 220px;
   /* Remove pop effect from images */
   transition: none;
+  box-sizing: border-box;
 }
 
 .centered {
@@ -223,10 +233,12 @@ img, .artwork-placeholder {
 
 /* Music page specific */
 .tracklist {
-  max-width: 600px;
+  max-width: min(600px, 90%);
   margin: 2.5rem auto;
-  font-size: 1.1rem;
+  font-size: clamp(1rem, 1.5vw, 1.1rem);
   line-height: 2.2;
+  padding: 0 1rem;
+  box-sizing: border-box;
 }
 
 .track-link {
@@ -259,4 +271,144 @@ img, .artwork-placeholder {
 
 .page-content-top {
   padding-top: 5.2rem;
+}
+
+/* Media Queries */
+@media screen and (max-width: 768px) {
+  .fixed-header {
+    padding: 0.8rem 0;
+  }
+  
+  .fixed-header a {
+    margin: 0 0.5rem;
+    padding: 0.4rem 0.8rem 0.2rem;
+  }
+  
+  .page-top {
+    margin-top: 4rem;
+  }
+  
+  .bio {
+    padding: 0 1rem;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .fixed-header a {
+    margin: 0 0.3rem;
+    padding: 0.3rem 0.6rem 0.1rem;
+  }
+  
+  .page-top {
+    margin-top: 3.5rem;
+  }
+}
+
+/* --- Additions and changes for mobile responsiveness --- */
+
+@media screen and (max-width: 600px) {
+  .fixed-header {
+    padding: 0.4rem 0.1rem;
+    font-size: 0.98rem;
+    gap: 0.2rem;
+  }
+  .fixed-header a {
+    font-size: 1rem;
+    margin: 0 0.15rem;
+    padding: 0.4rem 0.4rem 0.2rem 0.4rem;
+  }
+  .home-title-fixed {
+    top: 3.5rem;
+    font-size: 1.1rem;
+    padding: 0 0.5rem;
+  }
+  #animation-bg {
+    height: 180px;
+    min-height: 120px;
+    max-height: 220px;
+    margin-top: 4.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .content {
+    padding-bottom: 1rem;
+    min-height: 80vh;
+  }
+  .bio {
+    padding: 0 0.5rem;
+    font-size: 1rem;
+    max-width: 92%;
+    margin: 0 auto;
+  }
+  .section-title {
+    font-size: 1.1rem;
+    margin: 1.2rem 0 0.7rem;
+    max-width: 92%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .list {
+    font-size: 0.98rem;
+    margin-bottom: 1.2rem;
+    max-width: 92%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  img, .artwork-placeholder {
+    min-height: 120px;
+    max-width: 92%;
+    margin: 1.2rem auto 0.7rem auto;
+    padding: 0 0.5rem;
+    box-sizing: border-box;
+  }
+  .tracklist {
+    font-size: 0.98rem;
+    padding: 0 0.5rem;
+    max-width: 92%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .track-link {
+    font-size: 1rem;
+    padding: 0.4rem 0.7rem;
+  }
+  .page-top {
+    margin-top: 2.5rem;
+  }
+  /* New adjustments for consistent mobile spacing */
+  .page-content-top {
+    padding-top: 3.5rem;
+  }
+  .bio img {
+    margin-top: 3.5rem;
+  }
+  .tracklist {
+    margin-top: 3.5rem;
+  }
+  .artwork-placeholder {
+    margin-top: 3.5rem;
+  }
+}
+
+/* Make nav links stack at the bottom if .nav is used */
+@media screen and (max-width: 600px) {
+  .nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    bottom: 0.5rem;
+    padding: 0 0.2rem;
+  }
+  .nav a {
+    font-size: 1rem;
+    padding: 0.4rem 0.7rem;
+    margin: 0 0.2rem;
+  }
+}
+
+/* Prevent horizontal scroll on all elements */
+* {
+  box-sizing: border-box;
+  max-width: 100vw;
+  word-break: break-word;
 } 
