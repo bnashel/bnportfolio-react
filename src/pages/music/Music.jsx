@@ -34,28 +34,35 @@ export default function Music({ tracks }) {
     <div className="content fade-in page-content-top">
       <div className="section-title page-top">A Selection of Ambient Music I've Composed in My Free Time:</div>
       <div className="tracklist">
-        {tracks.map((track, idx) => (
-          <div className="track" key={track.title}>
-            <span
-              className="track-link"
-              style={{ textDecoration: 'underline', cursor: 'pointer', color: '#222', marginRight: 8 }}
-              onClick={() => handleTrackClick(idx)}
-            >
-              {track.title}
-            </span>
-            : {track.desc}
-            {currentIdx === idx && (
-              <audio
-                ref={audioRef}
-                src={track.src}
-                controls
-                autoPlay
-                style={{ display: 'block', marginTop: 8 }}
-                onEnded={() => setCurrentIdx(null)}
-              />
-            )}
-          </div>
-        ))}
+        {tracks.map((track, idx) => {
+          const [soundLine, instrLine] = track.desc.split('\n');
+          return (
+            <div className="track-card" key={track.title}>
+              <div className="track-title-col">
+                <span
+                  className="track-link"
+                  style={{ textDecoration: 'underline', cursor: 'pointer', color: '#222', marginBottom: 8 }}
+                  onClick={() => handleTrackClick(idx)}
+                >
+                  {track.title}
+                </span>
+                {currentIdx === idx && (
+                  <audio
+                    ref={audioRef}
+                    src={track.src}
+                    controls
+                    autoPlay
+                    style={{ display: 'block', margin: '10px 0 0 0', width: '100%', maxWidth: 400 }}
+                    onEnded={() => setCurrentIdx(null)}
+                  />
+                )}
+              </div>
+              <div className="track-details">
+                <div className="track-instr"><strong><em>Instrumentation:</em></strong> {instrLine.replace('Instrumentation: ', '')}</div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

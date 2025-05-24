@@ -20,28 +20,28 @@ import './styles.css';
 
 const tracks = [
   {
-    title: 'blue wave',
-    desc: 'logic, felt piano, sync bass',
+    title: 'Blue Wave',
+    desc: 'Sound: Warm, sustained, with slow attack and low-pass filtering\nInstrumentation: Arturia Prophet V, Felt Piano, Serum (analog waveforms), Omnisphere',
     src: blueWave,
   },
   {
-    title: 'drum buddy',
-    desc: 'one of a kind rhythm module',
+    title: 'Drum Buddy',
+    desc: 'Sound: Lo-fi, percussive, experimental with analog grit\nInstrumentation: Custom hardware drum synth (Drum Buddy), Modular V, RC-20',
     src: drumBuddy,
   },
   {
-    title: 'morning phase',
-    desc: 'freq shifting in logic, felt piano, moog',
+    title: 'Morning Phase',
+    desc: 'Sound: Intimate, ambient, cinematic with soft dynamics\nInstrumentation: Felt Piano, Kontakt textures, B3 organ emulation, Valhalla Shimmer',
     src: morningPhase,
   },
   {
-    title: 'the golden god',
-    desc: 'distorted moog, heavy bass',
+    title: 'The Golden God',
+    desc: 'Sound: Distorted, analog-heavy, energetic with punch\nInstrumentation: Arturia Mini V, u-he Diva, Maschine drum rack, Serum sub bass, Stutter Edit',
     src: goldenGod,
   },
   {
-    title: 'the inevitable cycle',
-    desc: 'violin, trumpet, felt piano',
+    title: 'The Snapped Link',
+    desc: 'Sound: Lush, pulsing, ambient with evolving layers\nInstrumentation: Arturia Prophet V, Diva bass, XO drum sampler, Output Portal, Omnisphere',
     src: inevitableCycle,
   },
 ];
