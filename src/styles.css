@@ -195,18 +195,14 @@ body {
 }
 
 #animation-bg {
-  width: 100%;
-  height: 220px;
-  min-height: 140px;
-  max-height: 320px;
-  margin: 6.5rem auto 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  box-sizing: border-box;
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
   overflow: hidden;
+  background: none;
 }
 
 body.home-no-scroll {
@@ -323,12 +319,9 @@ img, .artwork-placeholder {
     padding: 0 0.5rem;
   }
   #animation-bg {
-    height: 180px;
-    min-height: 120px;
-    max-height: 220px;
-    margin-top: 4.5rem;
-    position: relative;
-    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
   }
   .content {
     padding-bottom: 1rem;
