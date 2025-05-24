@@ -8,7 +8,7 @@ export default function Home() {
     // Prevent scrolling on homepage
     document.body.classList.add('home-no-scroll');
     // Typing animation
-    const text = "hi, i'm benjamin nashel";
+    const text = "Hi, I'm Benjamin Nashel";
     let index = 0;
     titleRef.current.textContent = '';
     const typingInterval = setInterval(() => {
@@ -27,9 +27,9 @@ export default function Home() {
   }, []);
 
   return (
-    <>
+    <div className="content fade-in">
       <div className="home-title-fixed" ref={titleRef}></div>
       <BackgroundAnimation />
-    </>
+    </div>
   );
 } 

@@ -1,21 +1,21 @@
 export default function MoviesBooks() {
   return (
     <div className="content fade-in page-content-top">
-      <div className="section-title page-top">my favorite movies:</div>
+      <div className="section-title page-top">My Favorite Movies:</div>
       <div className="list">
-        a clockwork orange (dir. stanley kubrick)<br />
-        scarface (dir. brian de palma)<br />
-        black swan (dir. darren aronofsky)<br />
-        oldboy (dir. park chan-wook)<br />
-        city of god (dir. fernando meirelles & katía lund)
+        A Clockwork Orange (Dir. Stanley Kubrick)<br />
+        Scarface (Dir. Brian De Palma)<br />
+        Black Swan (Dir. Darren Aronofsky)<br />
+        Oldboy (Dir. Park Chan-wook)<br />
+        City of God (Dir. Fernando Meirelles & Katía Lund)
       </div>
-      <div className="section-title">my favorite books:</div>
+      <div className="section-title">My Favorite Books:</div>
       <div className="list">
-        the plot against america (by philip roth)<br />
-        kafka on the shore (by haruki murakami)<br />
-        the wind-up bird chronicle (by haruki murakami)<br />
-        fierce invalids home from hot climates (by tom robbins)<br />
-        the dharma bums (by jack kerouac)
+        The Plot Against America (By Philip Roth)<br />
+        Kafka on the Shore (By Haruki Murakami)<br />
+        The Wind-Up Bird Chronicle (By Haruki Murakami)<br />
+        Fierce Invalids Home from Hot Climates (By Tom Robbins)<br />
+        The Dharma Bums (By Jack Kerouac)
       </div>
     </div>
   );

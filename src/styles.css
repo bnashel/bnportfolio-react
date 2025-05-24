@@ -68,7 +68,7 @@ body {
   left: 0;
   width: 100%;
   background: #f5f0e6 !important;
-  padding: 1rem 0;
+  padding: 1.5rem 0 1rem 0;
   text-align: center;
   z-index: 3;
   box-sizing: border-box;
@@ -180,7 +180,7 @@ body {
 /* Home page specific */
 .home-title-fixed {
   position: fixed;
-  top: 4.5rem;
+  top: 6rem;
   left: 0;
   width: 100%;
   text-align: center;
@@ -203,6 +203,8 @@ body {
   z-index: -1;
   overflow: hidden;
   background: none;
+  transform: scale(0.9);
+  transform-origin: center center;
 }
 
 body.home-no-scroll {

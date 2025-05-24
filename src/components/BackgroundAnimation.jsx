@@ -40,7 +40,7 @@ const BackgroundAnimation = () => {
         const height = containerRef.current.offsetHeight;
         console.log('Container dimensions:', width, height);
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setClearColor(0xf5f0e6);
+        renderer.setClearColor(0xf5f0e6, 0);
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(width, height);
         renderer.domElement.style.width = '100%';
@@ -48,6 +48,7 @@ const BackgroundAnimation = () => {
         renderer.domElement.style.position = 'absolute';
         renderer.domElement.style.top = '0';
         renderer.domElement.style.left = '0';
+        renderer.domElement.style.pointerEvents = 'auto';
         containerRef.current.appendChild(renderer.domElement);
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
@@ -188,8 +189,14 @@ const BackgroundAnimation = () => {
           if (!dragActive) {
             const baseRotationSpeed = 0.01;
             const excitementRotationSpeed = 0.02;
-            mesh.rotation.x += baseRotationSpeed + excitementRotationSpeed * excitementLevel;
-            mesh.rotation.y += baseRotationSpeed * 0.5 + excitementRotationSpeed * 0.5 * excitementLevel;
+            const timeSec = time * 0.001;
+            
+            // Add noise-based rotation variation
+            const noiseX = simplex(timeSec * 0.5, 0, 0, 0) * 0.02;
+            const noiseY = simplex(0, timeSec * 0.5, 0, 0) * 0.02;
+            
+            mesh.rotation.x += baseRotationSpeed + excitementRotationSpeed * excitementLevel + noiseX;
+            mesh.rotation.y += baseRotationSpeed * 0.5 + excitementRotationSpeed * 0.5 * excitementLevel + noiseY;
           }
 
           // Organic blob deformation
@@ -393,8 +400,9 @@ const BackgroundAnimation = () => {
         top: 0,
         left: 0,
         overflow: 'hidden',
-        backgroundColor: '#f5f0e6',
-        zIndex: -1
+        backgroundColor: 'transparent',
+        zIndex: -1,
+        pointerEvents: 'auto'
       }} 
     />
   );
