@@ -1,64 +1,73 @@
-import { useRef, useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useAudioPlayer } from '../../hooks/useAudioPlayer';
 
 export default function Music({ tracks }) {
-  const [currentIdx, setCurrentIdx] = useState(null);
-  const audioRef = useRef(null);
   const location = useLocation();
+  const { audioRef, isPlaying, currentTrack, playTrack, stopTrack } = useAudioPlayer();
 
-  // Play the selected track and show controls
-  const handleTrackClick = (idx) => {
-    setCurrentIdx(idx);
+  // Handle track click
+  const handleTrackClick = (track) => {
+    if (currentTrack?.src === track.src) {
+      stopTrack();
+    } else {
+      playTrack(track);
+    }
   };
 
-  // Fade out on navigation away
+  // Stop playback on navigation
   useEffect(() => {
     return () => {
-      if (audioRef.current && !audioRef.current.paused) {
-        let fade = setInterval(() => {
-          if (audioRef.current.volume > 0.02) {
-            audioRef.current.volume = Math.max(0, audioRef.current.volume - 0.02);
-          } else {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-            audioRef.current.volume = 1;
-            clearInterval(fade);
-          }
-        }, 20);
-      }
+      stopTrack();
     };
-    // eslint-disable-next-line
-  }, [location.pathname]);
+  }, [location.pathname, stopTrack]);
 
   return (
     <div className="content fade-in page-content-top">
       <div className="section-title page-top">A Selection of Ambient Music I've Composed in My Free Time:</div>
       <div className="tracklist">
-        {tracks.map((track, idx) => {
+        {tracks.map((track) => {
           const [soundLine, instrLine] = track.desc.split('\n');
+          const isCurrentTrack = currentTrack?.src === track.src;
+          
           return (
             <div className="track-card" key={track.title}>
               <div className="track-title-col">
                 <span
                   className="track-link"
-                  style={{ textDecoration: 'underline', cursor: 'pointer', color: '#222', marginBottom: 8 }}
-                  onClick={() => handleTrackClick(idx)}
+                  style={{ 
+                    textDecoration: 'underline', 
+                    cursor: 'pointer', 
+                    color: isCurrentTrack ? '#666' : '#222',
+                    marginBottom: 8,
+                    transition: 'color 0.3s ease'
+                  }}
+                  onClick={() => handleTrackClick(track)}
                 >
                   {track.title}
                 </span>
-                {currentIdx === idx && (
+                {isCurrentTrack && (
                   <audio
                     ref={audioRef}
                     src={track.src}
                     controls
                     autoPlay
-                    style={{ display: 'block', margin: '10px 0 0 0', width: '100%', maxWidth: 400 }}
-                    onEnded={() => setCurrentIdx(null)}
+                    style={{ 
+                      display: 'block', 
+                      margin: '10px 0 0 0', 
+                      width: '100%', 
+                      maxWidth: 400,
+                      opacity: isPlaying ? 1 : 0.7,
+                      transition: 'opacity 0.3s ease'
+                    }}
+                    onEnded={stopTrack}
                   />
                 )}
               </div>
               <div className="track-details">
-                <div className="track-instr"><strong><em>Instrumentation:</em></strong> {instrLine.replace('Instrumentation: ', '')}</div>
+                <div className="track-instr">
+                  <strong><em>Instrumentation:</em></strong> {instrLine.replace('Instrumentation: ', '')}
+                </div>
               </div>
             </div>
           );
