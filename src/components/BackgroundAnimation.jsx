@@ -14,6 +14,9 @@ const BackgroundAnimation = () => {
   const pulseTimeRef = useRef(0);
   const rotationVelocityRef = useRef({ x: 0, y: 0 });
   const lastTimeRef = useRef(0);
+  const excitedRef = useRef(false);
+  const excitementTargetRef = useRef(0);
+  const excitementLevelRef = useRef(0);
   const [error, setError] = useState(null);
 
   // Error boundary component
@@ -22,27 +25,21 @@ const BackgroundAnimation = () => {
   }
 
   useEffect(() => {
-    console.log('Animation effect started');
+    console.log('BackgroundAnimation useEffect started');
     let cleanupFunctions = [];
 
     try {
       // Initialize Three.js scene
       const initScene = () => {
-        console.log('Initializing scene');
+        console.log('Initializing scene...');
         if (!containerRef.current) {
           console.error('Container ref is null');
           return null;
         }
-
         const width = containerRef.current.offsetWidth;
         const height = containerRef.current.offsetHeight;
         console.log('Container dimensions:', width, height);
-
-        const renderer = new THREE.WebGLRenderer({ 
-          antialias: true,
-          alpha: true
-        });
-        
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setClearColor(0xf5f0e6);
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(width, height);
@@ -52,40 +49,33 @@ const BackgroundAnimation = () => {
         renderer.domElement.style.top = '0';
         renderer.domElement.style.left = '0';
         containerRef.current.appendChild(renderer.domElement);
-
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
         camera.position.z = 28;
         camera.position.y = 1.5;
-
         rendererRef.current = renderer;
         cameraRef.current = camera;
         sceneRef.current = scene;
-
-        console.log('Scene initialized successfully');
+        console.log('Scene, camera, renderer initialized');
         return { scene, camera, renderer };
       };
 
       // Create and configure the torus mesh
       const createTorus = () => {
-        console.log('Creating torus');
+        console.log('Creating torus...');
         const geometry = new THREE.TorusGeometry(2.5, 0.55, 64, 128);
         const vertexCount = geometry.attributes.position.count;
         const initialPositions = new Float32Array(geometry.attributes.position.array);
         const colors = new Float32Array(vertexCount * 3);
-
-        // Initialize colors with a blue-purple gradient
         for (let i = 0; i < vertexCount; i++) {
           const y = initialPositions[i * 3 + 1];
           const hue = 0.6 + 0.2 * (y + 2) / 4;
           const color = new THREE.Color().setHSL(hue % 1, 1.0, 0.7);
           colors.set([color.r, color.g, color.b], i * 3);
         }
-
         geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         geometry.attributes.color.needsUpdate = true;
         geometry.userData = { initialPositions, colors };
-
         const envMapUrls = [
           'https://threejs.org/examples/textures/cube/Bridge2/posx.jpg',
           'https://threejs.org/examples/textures/cube/Bridge2/negx.jpg',
@@ -94,9 +84,8 @@ const BackgroundAnimation = () => {
           'https://threejs.org/examples/textures/cube/Bridge2/posz.jpg',
           'https://threejs.org/examples/textures/cube/Bridge2/negz.jpg',
         ];
-
         return new Promise((resolve) => {
-          console.log('Loading environment map');
+          console.log('Loading environment map...');
           new THREE.CubeTextureLoader().load(envMapUrls, (envMap) => {
             console.log('Environment map loaded');
             const material = new THREE.MeshPhysicalMaterial({
@@ -111,11 +100,10 @@ const BackgroundAnimation = () => {
               ior: 1.5,
               thickness: 2.0
             });
-
             const mesh = new THREE.Mesh(geometry, material);
             mesh.position.y = 1.5;
             meshRef.current = mesh;
-            console.log('Torus created successfully');
+            console.log('Torus created and ready');
             resolve(mesh);
           });
         });
@@ -148,7 +136,7 @@ const BackgroundAnimation = () => {
 
       // Animation loop
       const animate = (mesh, scene, camera, renderer) => {
-        console.log('Starting animation loop');
+        console.log('Starting animation loop...');
         let dragDeformStrength = 0;
         let dragMouse = { x: 0, y: 0 };
         let dragActive = false;
@@ -160,18 +148,15 @@ const BackgroundAnimation = () => {
         let breathScale = 1;
         let targetBreathScale = 1;
         let breathTimeout = null;
-        let isExcited = false;
-        let excitementLevel = 0;
-        let excitementTarget = 0;
 
         function animateFrame(time) {
           if (!lastTimeRef.current) lastTimeRef.current = time;
           const deltaTime = (time - lastTimeRef.current) / 1000;
           lastTimeRef.current = time;
 
-          // Update excitement level
-          excitementLevel += (excitementTarget - excitementLevel) * Math.min(1, deltaTime * 3);
-          console.log('excitementLevel:', excitementLevel);
+          // Robust excitement interpolation
+          excitementLevelRef.current += (excitementTargetRef.current - excitementLevelRef.current) * Math.min(1, deltaTime * 3);
+          const excitementLevel = excitementLevelRef.current;
 
           // Update colors with time-based transition and excitement
           const colorArray = geometry.attributes.color.array;
@@ -190,7 +175,7 @@ const BackgroundAnimation = () => {
 
           // Smoothly interpolate breath scale with excitement
           breathScale += (targetBreathScale - breathScale) * Math.min(1, deltaTime * 8);
-          const excitementScale = 1 + Math.sin(time * 0.005) * 0.2 * excitementLevel;
+          const excitementScale = 1 + Math.sin(time * 0.005) * 0.08 * excitementLevel;
           mesh.scale.set(breathScale * excitementScale, breathScale * excitementScale, breathScale * excitementScale);
 
           // Update camera position
@@ -248,6 +233,7 @@ const BackgroundAnimation = () => {
 
           renderer.render(scene, camera);
           animationFrameRef.current = requestAnimationFrame(animateFrame);
+          if (time < 1e6) console.log('Animation frame running at time:', time);
         }
 
         // Calculate optimal camera distance
@@ -257,10 +243,9 @@ const BackgroundAnimation = () => {
           const scaledRadius = torusRadius * breathScale * margin;
           const fov = camera.fov * (Math.PI / 180);
           const aspect = camera.aspect;
-          
+          const excitementLevel = excitementLevelRef.current;
           const fitHeightDistance = scaledRadius / Math.tan(fov / 2);
           const fitWidthDistance = scaledRadius / (Math.tan(fov / 2) * aspect);
-          
           return Math.max(fitHeightDistance, fitWidthDistance) * (1 + excitementLevel * 0.1);
         };
 
@@ -294,11 +279,9 @@ const BackgroundAnimation = () => {
           );
           raycaster.setFromCamera(mouse, camera);
           const intersects = raycaster.intersectObject(mesh);
-          console.log('Clicked! Intersects:', intersects.length);
           if (intersects.length > 0) {
-            isExcited = !isExcited;
-            excitementTarget = isExcited ? 1 : 0;
-            console.log('Excited state toggled:', isExcited);
+            excitedRef.current = !excitedRef.current;
+            excitementTargetRef.current = excitedRef.current ? 1 : 0;
             targetBreathScale = 1.2;
             if (breathTimeout) clearTimeout(breathTimeout);
             breathTimeout = setTimeout(() => {
@@ -353,7 +336,7 @@ const BackgroundAnimation = () => {
       };
 
       // Initialize animation
-      console.log('Starting animation initialization');
+      console.log('Starting animation initialization...');
       const { scene, camera, renderer } = initScene();
       if (!scene || !camera || !renderer) {
         console.error('Failed to initialize scene components');
@@ -364,7 +347,7 @@ const BackgroundAnimation = () => {
       scene.add(group);
 
       createTorus().then((mesh) => {
-        console.log('Torus created, adding to scene');
+        console.log('Torus created, adding to scene...');
         group.add(mesh);
         setupLights(scene);
         const cleanupAnimation = animate(mesh, scene, camera, renderer);
