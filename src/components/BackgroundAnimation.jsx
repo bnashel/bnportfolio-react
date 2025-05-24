@@ -171,6 +171,7 @@ const BackgroundAnimation = () => {
 
           // Update excitement level
           excitementLevel += (excitementTarget - excitementLevel) * Math.min(1, deltaTime * 3);
+          console.log('excitementLevel:', excitementLevel);
 
           // Update colors with time-based transition and excitement
           const colorArray = geometry.attributes.color.array;
@@ -189,7 +190,7 @@ const BackgroundAnimation = () => {
 
           // Smoothly interpolate breath scale with excitement
           breathScale += (targetBreathScale - breathScale) * Math.min(1, deltaTime * 8);
-          const excitementScale = 1 + Math.sin(time * 0.005) * 0.05 * excitementLevel;
+          const excitementScale = 1 + Math.sin(time * 0.005) * 0.2 * excitementLevel;
           mesh.scale.set(breathScale * excitementScale, breathScale * excitementScale, breathScale * excitementScale);
 
           // Update camera position
@@ -293,10 +294,11 @@ const BackgroundAnimation = () => {
           );
           raycaster.setFromCamera(mouse, camera);
           const intersects = raycaster.intersectObject(mesh);
+          console.log('Clicked! Intersects:', intersects.length);
           if (intersects.length > 0) {
             isExcited = !isExcited;
             excitementTarget = isExcited ? 1 : 0;
-            
+            console.log('Excited state toggled:', isExcited);
             targetBreathScale = 1.2;
             if (breathTimeout) clearTimeout(breathTimeout);
             breathTimeout = setTimeout(() => {
