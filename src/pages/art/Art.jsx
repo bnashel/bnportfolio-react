@@ -4,7 +4,7 @@ import fallofrebelangels from '../../assets/art/fallofrebelangels.png';
 import disintegrationofpersistence from '../../assets/art/disintegrationofpersistence.png';
 import creationofbirds from '../../assets/art/creationofbirds.png';
 import melancholyandmystery from '../../assets/art/melancholyandmystery.png';
-import OptimizedImage from '../../components/OptimizedImage.jsx';
+import OptimizedImage from '../../components/OptimizedImage';
 
 export default function Art() {
   return (
