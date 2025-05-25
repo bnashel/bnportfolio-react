@@ -219,7 +219,7 @@ img, .artwork-placeholder {
   margin: 2.5rem auto 1.2rem auto;
   background: #f3f3f3;
   border-radius: 12px;
-  min-height: 220px;
+  /* min-height: 220px; */
   /* Remove pop effect from images */
   transition: none;
   box-sizing: border-box;
@@ -319,9 +319,25 @@ img, .artwork-placeholder {
     padding: 0.4rem 0.4rem 0.2rem 0.4rem;
   }
   .home-title-fixed {
-    top: 3.5rem;
-    font-size: 1.1rem;
-    padding: 0 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    top: 3rem;
+    left: 0;
+    width: 100vw;
+    height: 22vh;
+    min-height: 70px;
+    max-height: 130px;
+    font-size: 1.15rem;
+    padding: 0.3rem 0.5rem 0.2rem 0.5rem;
+    text-align: center;
+    position: fixed;
+    z-index: 2;
+    background: transparent;
+    pointer-events: none;
+    box-sizing: border-box;
+    letter-spacing: 0.03em;
   }
   #animation-bg {
     width: 100vw;
@@ -329,8 +345,22 @@ img, .artwork-placeholder {
     margin: 0;
   }
   .content {
-    padding-bottom: 1rem;
-    min-height: 80vh;
+    align-items: center;
+    justify-content: flex-start;
+    margin: 0 auto;
+    max-width: 98vw;
+    text-align: center;
+  }
+  .content > h1, .content > h2, .content > h3, .content > div, .content > img {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .content > h1 {
+    text-align: center;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1.5rem;
   }
   .bio {
     padding: 0 0.5rem;
@@ -353,11 +383,14 @@ img, .artwork-placeholder {
     margin-right: auto;
   }
   img, .artwork-placeholder {
-    min-height: 120px;
-    max-width: 92%;
-    margin: 1.2rem auto 0.7rem auto;
-    padding: 0 0.5rem;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
+  }
+  img.artwork-placeholder {
+    margin-top: 3.5rem;
+    margin-bottom: 2rem;
   }
   .tracklist {
     font-size: 0.98rem;
@@ -365,6 +398,7 @@ img, .artwork-placeholder {
     max-width: 92%;
     margin-left: auto;
     margin-right: auto;
+    margin-top: 0.4rem;
   }
   .track-link {
     font-size: 1rem;
@@ -381,10 +415,10 @@ img, .artwork-placeholder {
     margin-top: 3.5rem;
   }
   .tracklist {
-    margin-top: 3.5rem;
+    margin-top: 0.4rem;
   }
-  .artwork-placeholder {
-    margin-top: 3.5rem;
+  .centered {
+    margin-bottom: 1.5rem;
   }
 }
 
@@ -474,5 +508,15 @@ img, .artwork-placeholder {
   }
   .track-sound, .track-instr {
     font-size: 0.95em;
+  }
+}
+
+.art-image-container {
+  padding: 0 clamp(1rem, 3vw, 2rem);
+  box-sizing: border-box;
+}
+@media screen and (max-width: 600px) {
+  .art-image-container {
+    padding: 0 0.5rem;
   }
 } 
