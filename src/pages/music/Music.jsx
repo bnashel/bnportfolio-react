@@ -24,7 +24,7 @@ export default function Music({ tracks }) {
 
   return (
     <div className="content fade-in page-content-top">
-      <div className="section-title page-top">A Selection of Ambient Music I've Composed in My Free Time:</div>
+      <div className="section-title page-top">A selection of ambient music I've composed in my free time:</div>
       <div className="tracklist">
         {tracks.map((track) => {
           const [soundLine, instrLine] = track.desc.split('\n');

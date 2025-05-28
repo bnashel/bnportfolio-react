@@ -1,9 +1,10 @@
 import roadImg from '../../assets/road.jpg';
+import OptimizedImage from '../../components/OptimizedImage';
 
 export default function About() {
   return (
     <div className="bio page-content-top fade-in">
-      <img
+      <OptimizedImage
         className="page-top"
         src={roadImg}
         alt="on the road"
@@ -22,7 +23,7 @@ export default function About() {
       </div>
       <div style={{ textAlign: 'left' }}>
         I'm originally from Brooklyn and currently a student at Vanderbilt University, studying Economics and History.<br /><br />
-        I attended the Packer Collegiate Institute from 2020 to 2024 and spent most of high school focused on classical piano and composing electronic music. This inspired me to start a music tutoring nonprofit called InTune. At first, I taught one student. By senior year, we had lessons running across three continents.<br /><br />
+        I attended the Packer Collegiate Institute from 2020 to 2024 and spent most of high school focused on classical piano and composing electronic music. This inspired me to start a music tutoring nonprofit called InTune. We had lessons running across three continents by the time I graduated.<br /><br />
         I also have a deep love for historical research—particularly the Boasian Circle and early cultural anthropology. I'm fascinated by how notions of culture travel across time and geography, and I've spent the past few years exploring those connections through archival research and academic writing.<br /><br />
         Now at Vanderbilt, I'm working at an AI-native marketing software startup called Enttor, where we build tools that help consumer brands scale content efficiently without losing their creative voice.<br /><br />
         Across music, research, and startups, I'm drawn to the same core impulse: using ideas to build something lasting and something that connects people. Whether composing a piece, tracing the evolution of cultural theory, or launching a product, I'm motivated by a curiosity about how things fit together and a desire to shape systems that help others express themselves more fully.
