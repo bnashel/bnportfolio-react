@@ -27,7 +27,7 @@ export default function Art() {
           className="artwork-placeholder" 
         />
       </div>
-      <div className="centered">The Triumph of Death (Pieter Bruegel the Elder, c. 1562)</div>
+      <div className="centered">The Triumph of Death (Pieter Bruegel the Elder, 1562)</div>
       
       <div className="art-image-container">
         <OptimizedImage 
