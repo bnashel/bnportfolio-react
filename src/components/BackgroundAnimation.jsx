@@ -296,15 +296,11 @@ const BackgroundAnimation = () => {
             const mesh = new THREE.Mesh(geometry, shaderMaterials[0].material);
             mesh.position.y = 1.5;
             
-            // Store references for cycling with transitions
+            // Store references for cycling
             mesh.userData = { 
               shaderMaterials,
               currentShaderIndex: 0,
-              nextShaderIndex: 1 % shaderMaterials.length,
-              lastShaderChange: 0,
-              transitionDuration: 2000, // 2 second smooth transition
-              isTransitioning: false,
-              transitionProgress: 0
+              lastShaderChange: 0
             };
             meshRef.current = mesh;
             
@@ -373,160 +369,20 @@ const BackgroundAnimation = () => {
           const deltaTime = (time - lastTimeRef.current) / 1000;
           lastTimeRef.current = time;
 
-          // Handle shader cycling with smooth transitions
-          const shaderCycleInterval = 5000; // 5 seconds display + 2 seconds transition = 7 second total cycle  
+                    // Handle instant shader cycling
+          const shaderCycleInterval = 4000; // 4 seconds per shader
           if (mesh.userData && mesh.userData.shaderMaterials) {
             const userData = mesh.userData;
             const timeSinceLastChange = time - userData.lastShaderChange;
             
-            if (!userData.isTransitioning && timeSinceLastChange > shaderCycleInterval) {
-              // Start transition to next shader
-              userData.isTransitioning = true;
-              userData.transitionProgress = 0;
-              userData.nextShaderIndex = (userData.currentShaderIndex + 1) % userData.shaderMaterials.length;
-              console.log(`Starting transition to: ${userData.shaderMaterials[userData.nextShaderIndex].name}`);
+            if (timeSinceLastChange > shaderCycleInterval) {
+              // Switch to next shader instantly
+              userData.currentShaderIndex = (userData.currentShaderIndex + 1) % userData.shaderMaterials.length;
+              const newMaterial = userData.shaderMaterials[userData.currentShaderIndex];
+              mesh.material = newMaterial.material;
+              userData.lastShaderChange = time;
+              console.log(`Switched to shader: ${newMaterial.name}`);
             }
-            
-            if (userData.isTransitioning) {
-              // Update transition progress
-              const transitionTime = timeSinceLastChange - shaderCycleInterval;
-              userData.transitionProgress = Math.min(transitionTime / userData.transitionDuration, 1.0);
-              
-              // Create transition material
-              const currentMaterial = userData.shaderMaterials[userData.currentShaderIndex];
-              const nextMaterial = userData.shaderMaterials[userData.nextShaderIndex];
-              
-              if (userData.transitionProgress >= 1.0) {
-                // Transition complete
-                userData.isTransitioning = false;
-                userData.currentShaderIndex = userData.nextShaderIndex;
-                mesh.material = nextMaterial.material;
-                userData.lastShaderChange = time;
-                console.log(`Transition complete: ${nextMaterial.name}`);
-                              } else {
-                  // Enhanced smooth transitions for all material types
-                  const blendFactor = userData.transitionProgress;
-                  const smoothBlend = smoothstep(0.0, 1.0, blendFactor); // Smoother easing
-                  
-                  if (currentMaterial.material.type === 'MeshPhysicalMaterial' && 
-                      nextMaterial.material.type === 'MeshPhysicalMaterial') {
-                    
-                    const mat1 = currentMaterial.material;
-                    const mat2 = nextMaterial.material;
-                    
-                    // Create smoothly blended physical material
-                    const blendedMaterial = new THREE.MeshPhysicalMaterial({
-                      color: new THREE.Color().lerpColors(
-                        new THREE.Color(mat1.color || 0xffffff), 
-                        new THREE.Color(mat2.color || 0xffffff), 
-                        smoothBlend
-                      ),
-                      roughness: THREE.MathUtils.lerp(mat1.roughness || 0, mat2.roughness || 0, smoothBlend),
-                      metalness: THREE.MathUtils.lerp(mat1.metalness || 0, mat2.metalness || 0, smoothBlend),
-                      transmission: THREE.MathUtils.lerp(
-                        mat1.transmission || 0, 
-                        mat2.transmission || 0, 
-                        smoothBlend
-                      ),
-                      opacity: THREE.MathUtils.lerp(
-                        mat1.opacity || 1, 
-                        mat2.opacity || 1, 
-                        smoothBlend
-                      ),
-                      transparent: mat1.transparent || mat2.transparent,
-                      clearcoat: THREE.MathUtils.lerp(
-                        mat1.clearcoat || 0, 
-                        mat2.clearcoat || 0, 
-                        smoothBlend
-                      ),
-                      ior: THREE.MathUtils.lerp(mat1.ior || 1.5, mat2.ior || 1.5, smoothBlend),
-                      envMap: mat1.envMap || mat2.envMap,
-                      envMapIntensity: THREE.MathUtils.lerp(
-                        mat1.envMapIntensity || 1, 
-                        mat2.envMapIntensity || 1, 
-                        smoothBlend
-                      )
-                    });
-                    
-                    mesh.material = blendedMaterial;
-                  } else {
-                    // For shader materials, create a blending shader
-                    if (!userData.transitionMaterial) {
-                      userData.transitionMaterial = new THREE.ShaderMaterial({
-                        uniforms: {
-                          time: { value: 0 },
-                          blendFactor: { value: 0 },
-                          envMap: { value: mesh.material.uniforms?.envMap?.value || null }
-                        },
-                        vertexShader: `
-                          varying vec3 vNormal;
-                          varying vec3 vPosition;
-                          varying vec3 vViewDirection;
-                          varying vec3 vWorldPosition;
-                          
-                          void main() {
-                            vNormal = normalize(normalMatrix * normal);
-                            vPosition = position;
-                            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-                            vWorldPosition = worldPosition.xyz;
-                            vViewDirection = normalize(cameraPosition - worldPosition.xyz);
-                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                          }
-                        `,
-                        fragmentShader: `
-                          uniform float time;
-                          uniform float blendFactor;
-                          uniform samplerCube envMap;
-                          varying vec3 vNormal;
-                          varying vec3 vPosition;
-                          varying vec3 vViewDirection;
-                          varying vec3 vWorldPosition;
-                          
-                          // Smooth transition function
-                          float smootherstep(float edge0, float edge1, float x) {
-                            x = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-                            return x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
-                          }
-                          
-                          // Get material colors based on current and next shader
-                          vec3 getCurrentColor() {
-                            // This will be dynamically updated based on current shader
-                            return vec3(0.5, 0.8, 1.0); // Default crystal glass
-                          }
-                          
-                          vec3 getNextColor() {
-                            // This will be dynamically updated based on next shader  
-                            return vec3(1.0, 0.4, 0.0); // Default lava
-                          }
-                          
-                          void main() {
-                            vec3 currentColor = getCurrentColor();
-                            vec3 nextColor = getNextColor();
-                            
-                            float smoothBlend = smootherstep(0.0, 1.0, blendFactor);
-                            vec3 finalColor = mix(currentColor, nextColor, smoothBlend);
-                            
-                            gl_FragColor = vec4(finalColor, 1.0);
-                          }
-                        `
-                      });
-                    }
-                    
-                    // Update blend factor and time
-                    userData.transitionMaterial.uniforms.blendFactor.value = smoothBlend;
-                    userData.transitionMaterial.uniforms.time.value = time * 0.001;
-                    mesh.material = userData.transitionMaterial;
-                  }
-                }
-                
-                // Add smoothstep function for smoother transitions
-                function smoothstep(edge0, edge1, x) {
-                  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
-                  return t * t * (3 - 2 * t);
-                }
-              
-                             
-                         }
           }
 
           // Update shader uniforms for time-based animations
