@@ -6,11 +6,12 @@ export default function Home() {
   const gridCanvasRef = useRef(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
+  // One-time setup effect (typing animation, scroll prevention, mouse handler)
   useEffect(() => {
     // Prevent scrolling on homepage
     document.body.classList.add('home-no-scroll');
     
-    // Typing animation
+    // Typing animation - runs only once
     const text = "Hi, I'm Benjamin Nashel";
     let index = 0;
     titleRef.current.textContent = '';
@@ -32,7 +33,15 @@ export default function Home() {
 
     window.addEventListener('mousemove', handleMouseMove);
 
-    // Animated grid canvas setup
+    return () => {
+      clearInterval(typingInterval);
+      document.body.classList.remove('home-no-scroll');
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []); // No dependencies - runs only once
+
+  // Grid animation effect - separate from typing animation
+  useEffect(() => {
     const setupAnimatedGrid = () => {
       const canvas = gridCanvasRef.current;
       if (!canvas) return;
@@ -112,14 +121,10 @@ export default function Home() {
     };
 
     const gridCleanup = setupAnimatedGrid();
-
     return () => {
-      clearInterval(typingInterval);
-      document.body.classList.remove('home-no-scroll');
-      window.removeEventListener('mousemove', handleMouseMove);
       if (gridCleanup) gridCleanup();
     };
-  }, [mousePosition.x, mousePosition.y]);
+  }, [mousePosition.x, mousePosition.y]); // Only grid depends on mouse position
 
   return (
     <div className="content fade-in">
