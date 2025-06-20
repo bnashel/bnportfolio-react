@@ -74,7 +74,12 @@ const BackgroundAnimation = () => {
         console.log('Creating torus with cycling shaders...');
         
         const createGeometry = () => {
-          const geometry = new THREE.TorusGeometry(2.5, 0.5, 64, 128);
+          // Reduce geometry complexity on mobile devices
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          const radialSegments = isMobile ? 32 : 64;
+          const tubularSegments = isMobile ? 64 : 128;
+          
+          const geometry = new THREE.TorusGeometry(2.5, 0.5, radialSegments, tubularSegments);
           const vertexCount = geometry.attributes.position.count;
           const initialPositions = new Float32Array(geometry.attributes.position.array);
           const colors = new Float32Array(vertexCount * 3);
@@ -481,34 +486,45 @@ const BackgroundAnimation = () => {
           animationFrameRef.current = requestAnimationFrame(animateFrame);
         }
 
-        // Mouse event handlers
-        const handleMouseDown = (e) => {
-          dragActive = true;
-          dragDeformStrength = 0.5;
+        // Mouse and touch event handlers
+        const getEventCoordinates = (e) => {
           const rect = renderer.domElement.getBoundingClientRect();
-          dragMouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-          dragMouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+          const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+          return {
+            x: ((clientX - rect.left) / rect.width) * 2 - 1,
+            y: -((clientY - rect.top) / rect.height) * 2 + 1
+          };
         };
 
-        const handleMouseMove = (e) => {
+        const handleStart = (e) => {
+          e.preventDefault();
+          dragActive = true;
+          dragDeformStrength = 0.5;
+          const coords = getEventCoordinates(e);
+          dragMouse.x = coords.x;
+          dragMouse.y = coords.y;
+        };
+
+        const handleMove = (e) => {
           if (dragActive) {
-            const rect = renderer.domElement.getBoundingClientRect();
-            dragMouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-            dragMouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+            e.preventDefault();
+            const coords = getEventCoordinates(e);
+            dragMouse.x = coords.x;
+            dragMouse.y = coords.y;
           }
         };
 
-        const handleMouseUp = () => {
+        const handleEnd = (e) => {
+          e.preventDefault();
           dragActive = false;
           dragDeformStrength = 0;
         };
 
         const handleClick = (e) => {
-          const rect = renderer.domElement.getBoundingClientRect();
-          const mouse = new THREE.Vector2(
-            ((e.clientX - rect.left) / rect.width) * 2 - 1,
-            -((e.clientY - rect.top) / rect.height) * 2 + 1
-          );
+          e.preventDefault();
+          const coords = getEventCoordinates(e);
+          const mouse = new THREE.Vector2(coords.x, coords.y);
           raycaster.setFromCamera(mouse, camera);
           const intersects = raycaster.intersectObject(mesh);
           if (intersects.length > 0) {
@@ -522,20 +538,35 @@ const BackgroundAnimation = () => {
           }
         };
 
-        renderer.domElement.addEventListener('mousedown', handleMouseDown);
-        window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('mouseup', handleMouseUp);
+        // Mouse events
+        renderer.domElement.addEventListener('mousedown', handleStart);
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseup', handleEnd);
         renderer.domElement.addEventListener('click', handleClick);
-        window.addEventListener('mouseleave', handleMouseUp);
+        window.addEventListener('mouseleave', handleEnd);
+
+        // Touch events for mobile
+        renderer.domElement.addEventListener('touchstart', handleStart, { passive: false });
+        renderer.domElement.addEventListener('touchmove', handleMove, { passive: false });
+        renderer.domElement.addEventListener('touchend', handleEnd, { passive: false });
+        renderer.domElement.addEventListener('touchcancel', handleEnd, { passive: false });
 
         animationFrameRef.current = requestAnimationFrame(animateFrame);
 
         return () => {
-          renderer.domElement.removeEventListener('mousedown', handleMouseDown);
-          window.removeEventListener('mousemove', handleMouseMove);
-          window.removeEventListener('mouseup', handleMouseUp);
+          // Remove mouse event listeners
+          renderer.domElement.removeEventListener('mousedown', handleStart);
+          window.removeEventListener('mousemove', handleMove);
+          window.removeEventListener('mouseup', handleEnd);
           renderer.domElement.removeEventListener('click', handleClick);
-          window.removeEventListener('mouseleave', handleMouseUp);
+          window.removeEventListener('mouseleave', handleEnd);
+          
+          // Remove touch event listeners
+          renderer.domElement.removeEventListener('touchstart', handleStart);
+          renderer.domElement.removeEventListener('touchmove', handleMove);
+          renderer.domElement.removeEventListener('touchend', handleEnd);
+          renderer.domElement.removeEventListener('touchcancel', handleEnd);
+          
           if (breathTimeout) clearTimeout(breathTimeout);
           if (animationFrameRef.current) {
             cancelAnimationFrame(animationFrameRef.current);
