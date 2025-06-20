@@ -18,10 +18,10 @@ export default function About() {
           boxShadow: '0 2px 16px rgba(0,0,0,0.07)'
         }}
       />
-      <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.15em', marginBottom: '1.2rem' }}>
+      <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.15em', marginBottom: '2rem' }}>
         Welcome to my personal anthology
       </div>
-      <div style={{ textAlign: 'left' }}>
+      <div style={{ textAlign: 'left', marginBottom: '2rem' }}>
         I'm originally from Brooklyn and currently a student at Vanderbilt University, studying Economics and History.<br /><br />
         I attended the Packer Collegiate Institute from 2020 to 2024 and spent most of high school focused on classical piano and composing electronic music. This inspired me to start a music tutoring nonprofit called InTune. We had lessons running across three continents by the time I graduated.<br /><br />
         I also have a deep love for historical research—particularly the Boasian Circle and early cultural anthropology. I'm fascinated by how notions of culture travel across time and geography, and I've spent the past few years exploring those connections through archival research and academic writing.<br /><br />
