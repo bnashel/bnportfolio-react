@@ -10,6 +10,8 @@ import About from './pages/about/About';
 import Art from './pages/art/Art';
 import Music from './pages/music/Music';
 import MoviesBooks from './pages/movies-books/MoviesBooks';
+import ThemeProvider from './components/ThemeProvider';
+import ThemeToggle from './components/ThemeToggle';
 import blueWave from './assets/music/Blue Wave.m4a';
 import drumBuddy from './assets/music/Drum Buddy long H 011024.m4a';
 import morningPhase from './assets/music/Morning Phase.m4a';
@@ -49,11 +51,17 @@ function AppContent() {
   return (
     <>
       <div className="fixed-header">
-        <Link to="/">Home</Link>
-        <Link to="/about">About Me</Link>
-        <Link to="/movies-books">Movies & Books</Link>
-        <Link to="/art">Art</Link>
-        <Link to="/music">Music</Link>
+        <div className="header-spacer"></div>
+        <div className="header-nav-center">
+          <Link to="/">Home</Link>
+          <Link to="/about">About Me</Link>
+          <Link to="/movies-books">Movies & Books</Link>
+          <Link to="/art">Art</Link>
+          <Link to="/music">Music</Link>
+        </div>
+        <div className="header-right">
+          <ThemeToggle />
+        </div>
       </div>
       <div className="content fade-in">
         <Routes>
@@ -70,8 +78,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </ThemeProvider>
   );
 } 

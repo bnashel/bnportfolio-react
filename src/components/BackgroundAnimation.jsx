@@ -27,6 +27,14 @@ const BackgroundAnimation = () => {
   useEffect(() => {
     console.log('BackgroundAnimation useEffect started');
     let cleanupFunctions = [];
+    
+    // Ensure clean slate (important for React StrictMode)
+    if (containerRef.current && containerRef.current.children.length > 0) {
+      console.log('Clearing existing canvas elements');
+      Array.from(containerRef.current.children).forEach(child => {
+        containerRef.current.removeChild(child);
+      });
+    }
 
     try {
       // Initialize Three.js scene
@@ -61,22 +69,212 @@ const BackgroundAnimation = () => {
         return { scene, camera, renderer };
       };
 
-      // Create and configure the torus mesh
-      const createTorus = () => {
-        console.log('Creating torus...');
-        const geometry = new THREE.TorusGeometry(2.5, 0.55, 64, 128);
-        const vertexCount = geometry.attributes.position.count;
-        const initialPositions = new Float32Array(geometry.attributes.position.array);
-        const colors = new Float32Array(vertexCount * 3);
-        for (let i = 0; i < vertexCount; i++) {
-          const y = initialPositions[i * 3 + 1];
-          const hue = 0.6 + 0.2 * (y + 2) / 4;
-          const color = new THREE.Color().setHSL(hue % 1, 1.0, 0.7);
-          colors.set([color.r, color.g, color.b], i * 3);
-        }
-        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        geometry.attributes.color.needsUpdate = true;
-        geometry.userData = { initialPositions, colors };
+      // Create torus with cycling shader effects
+      const createTorusWithShaders = () => {
+        console.log('Creating torus with cycling shaders...');
+        
+        const createGeometry = () => {
+          const geometry = new THREE.TorusGeometry(2.5, 0.5, 64, 128);
+          const vertexCount = geometry.attributes.position.count;
+          const initialPositions = new Float32Array(geometry.attributes.position.array);
+          const colors = new Float32Array(vertexCount * 3);
+          
+          for (let i = 0; i < vertexCount; i++) {
+            const y = initialPositions[i * 3 + 1];
+            const hue = 0.6 + 0.2 * (y + 2) / 4;
+            const color = new THREE.Color().setHSL(hue % 1, 1.0, 0.7);
+            colors.set([color.r, color.g, color.b], i * 3);
+          }
+          
+          geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+          geometry.attributes.color.needsUpdate = true;
+          geometry.userData = { initialPositions, colors };
+          return geometry;
+        };
+
+        // Create different shader materials
+        const createShaderMaterials = (envMap) => {
+          const materials = [
+            // 1. Crystal Glass
+            {
+              name: "Crystal Glass",
+              material: new THREE.MeshPhysicalMaterial({
+                color: 0x88ccff,
+                roughness: 0.0,
+                metalness: 0.0,
+                transmission: 0.9,
+                transparent: true,
+                opacity: 0.8,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.0,
+                ior: 1.8,
+                thickness: 1.0,
+                envMap: envMap,
+                envMapIntensity: 1.5
+              })
+            },
+            
+            // 2. Molten Lava
+            {
+              name: "Molten Lava",
+              material: new THREE.ShaderMaterial({
+                uniforms: {
+                  time: { value: 0 }
+                },
+                vertexShader: `
+                  varying vec3 vPosition;
+                  varying vec3 vNormal;
+                  
+                  void main() {
+                    vPosition = position;
+                    vNormal = normal;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                  }
+                `,
+                fragmentShader: `
+                  uniform float time;
+                  varying vec3 vPosition;
+                  varying vec3 vNormal;
+                  
+                  float noise(vec3 p) {
+                    return fract(sin(dot(p, vec3(12.9898, 78.233, 45.543))) * 43758.5453);
+                  }
+                  
+                  void main() {
+                    vec3 p = vPosition * 2.0 + time * 0.5;
+                    float n = noise(p) * 0.5 + noise(p * 2.0) * 0.25 + noise(p * 4.0) * 0.125;
+                    
+                    float heat = sin(vPosition.y * 5.0 + time * 2.0 + n * 3.0) * 0.5 + 0.5;
+                    
+                    vec3 cold = vec3(0.8, 0.1, 0.0); // Dark red
+                    vec3 hot = vec3(1.0, 0.8, 0.2);  // Bright yellow
+                    vec3 color = mix(cold, hot, heat);
+                    
+                    // Add some emissive glow
+                    color += vec3(0.3, 0.1, 0.0) * heat;
+                    
+                    gl_FragColor = vec4(color, 1.0);
+                  }
+                `
+              })
+            },
+            
+            // 3. Digital Matrix
+            {
+              name: "Digital Matrix",
+              material: new THREE.ShaderMaterial({
+                uniforms: {
+                  time: { value: 0 }
+                },
+                vertexShader: `
+                  varying vec3 vPosition;
+                  varying vec3 vNormal;
+                  varying vec3 vWorldPosition;
+                  
+                  void main() {
+                    vPosition = position;
+                    vNormal = normal;
+                    vec4 worldPos = modelMatrix * vec4(position, 1.0);
+                    vWorldPosition = worldPos.xyz;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                  }
+                `,
+                fragmentShader: `
+                  uniform float time;
+                  varying vec3 vPosition;
+                  varying vec3 vNormal;
+                  varying vec3 vWorldPosition;
+                  
+                  void main() {
+                    // Create grid pattern
+                    vec3 p = vWorldPosition * 4.0;
+                    vec3 grid = abs(fract(p) - 0.5) / fwidth(p);
+                    float lineWidth = min(min(grid.x, grid.y), grid.z);
+                    float gridMask = 1.0 - min(lineWidth, 1.0);
+                    
+                    // Digital rain effect
+                    float rain = fract(sin(floor(p.x) * 123.456 + floor(p.z) * 789.012) * 43758.5453);
+                    rain = smoothstep(0.8, 1.0, rain);
+                    float rainAnim = fract(time * 2.0 + rain * 10.0);
+                    rainAnim = smoothstep(0.0, 0.2, rainAnim) * (1.0 - smoothstep(0.8, 1.0, rainAnim));
+                    
+                    vec3 color = vec3(0.0, 1.0, 0.3) * gridMask; // Green wireframe
+                    color += vec3(0.0, 1.0, 0.8) * rainAnim * rain; // Cyan rain
+                    
+                    // Add some base glow
+                    color += vec3(0.0, 0.3, 0.1) * 0.3;
+                    
+                    gl_FragColor = vec4(color, 1.0);
+                  }
+                `
+              })
+            },
+            
+            // 4. Liquid Gold
+            {
+              name: "Liquid Gold",
+              material: new THREE.ShaderMaterial({
+                uniforms: {
+                  time: { value: 0 },
+                  envMap: { value: envMap }
+                },
+                vertexShader: `
+                  varying vec3 vNormal;
+                  varying vec3 vPosition;
+                  varying vec3 vViewDirection;
+                  
+                  void main() {
+                    vNormal = normalize(normalMatrix * normal);
+                    vPosition = position;
+                    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                    vViewDirection = normalize(cameraPosition - worldPosition.xyz);
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                  }
+                `,
+                fragmentShader: `
+                  uniform float time;
+                  uniform samplerCube envMap;
+                  varying vec3 vNormal;
+                  varying vec3 vPosition;
+                  varying vec3 vViewDirection;
+                  
+                  float noise(vec3 p) {
+                    return fract(sin(dot(p, vec3(12.9898, 78.233, 45.543))) * 43758.5453);
+                  }
+                  
+                  void main() {
+                    // Flowing liquid effect
+                    vec3 p = vPosition * 3.0 + time * 0.2;
+                    float flow = noise(p) * 0.5 + noise(p * 2.0) * 0.25;
+                    
+                    // Gold color gradient
+                    vec3 darkGold = vec3(0.8, 0.5, 0.1);
+                    vec3 brightGold = vec3(1.0, 0.9, 0.3);
+                    vec3 goldColor = mix(darkGold, brightGold, flow);
+                    
+                    // Fresnel for metallic look
+                    float fresnel = pow(1.0 - dot(vViewDirection, vNormal), 2.0);
+                    
+                    // Environment reflection
+                    vec3 reflectVec = reflect(-vViewDirection, vNormal);
+                    vec3 envColor = textureCube(envMap, reflectVec).rgb;
+                    
+                    // Combine everything
+                    vec3 color = mix(goldColor, envColor * goldColor, fresnel * 0.8);
+                    
+                    // Add some extra shine
+                    color += vec3(1.0, 0.9, 0.6) * pow(fresnel, 4.0) * 0.3;
+                    
+                    gl_FragColor = vec4(color, 1.0);
+                  }
+                `
+              })
+            }
+          ];
+          
+          return materials;
+        };
+
         const envMapUrls = [
           'https://threejs.org/examples/textures/cube/Bridge2/posx.jpg',
           'https://threejs.org/examples/textures/cube/Bridge2/negx.jpg',
@@ -85,26 +283,33 @@ const BackgroundAnimation = () => {
           'https://threejs.org/examples/textures/cube/Bridge2/posz.jpg',
           'https://threejs.org/examples/textures/cube/Bridge2/negz.jpg',
         ];
+        
         return new Promise((resolve) => {
           console.log('Loading environment map...');
           new THREE.CubeTextureLoader().load(envMapUrls, (envMap) => {
             console.log('Environment map loaded');
-            const material = new THREE.MeshPhysicalMaterial({
-              vertexColors: true,
-              roughness: 0.01,
-              metalness: 0.6,
-              clearcoat: 1,
-              clearcoatRoughness: 0.01,
-              reflectivity: 1,
-              envMap: envMap,
-              envMapIntensity: 2,
-              ior: 1.5,
-              thickness: 2.0
-            });
-            const mesh = new THREE.Mesh(geometry, material);
+            
+            const shaderMaterials = createShaderMaterials(envMap);
+            
+            // Create torus with first material
+            const geometry = createGeometry();
+            const mesh = new THREE.Mesh(geometry, shaderMaterials[0].material);
             mesh.position.y = 1.5;
+            
+            // Store references for cycling with transitions
+            mesh.userData = { 
+              shaderMaterials,
+              currentShaderIndex: 0,
+              nextShaderIndex: 1 % shaderMaterials.length,
+              lastShaderChange: 0,
+              transitionDuration: 2000, // 2 second smooth transition
+              isTransitioning: false,
+              transitionProgress: 0
+            };
             meshRef.current = mesh;
-            console.log('Torus created and ready');
+            
+            console.log('Torus with cycling shaders created');
+            
             resolve(mesh);
           });
         });
@@ -135,7 +340,7 @@ const BackgroundAnimation = () => {
         console.log('Lights setup complete');
       };
 
-      // Animation loop
+      // Animation loop for torus
       const animate = (mesh, scene, camera, renderer) => {
         console.log('Starting animation loop...');
         let dragDeformStrength = 0;
@@ -150,53 +355,206 @@ const BackgroundAnimation = () => {
         let targetBreathScale = 1;
         let breathTimeout = null;
 
+        // Calculate optimal camera distance
+        const calculateOptimalCameraDistance = () => {
+          const torusRadius = 2.5 + 0.5;
+          const margin = 1.8;
+          const scaledRadius = torusRadius * breathScale * margin;
+          const fov = camera.fov * (Math.PI / 180);
+          const aspect = camera.aspect;
+          const excitementLevel = excitementLevelRef.current;
+          const fitHeightDistance = scaledRadius / Math.tan(fov / 2);
+          const fitWidthDistance = scaledRadius / (Math.tan(fov / 2) * aspect);
+          return Math.max(fitHeightDistance, fitWidthDistance) * (1 + excitementLevel * 0.1);
+        };
+
         function animateFrame(time) {
           if (!lastTimeRef.current) lastTimeRef.current = time;
           const deltaTime = (time - lastTimeRef.current) / 1000;
           lastTimeRef.current = time;
 
+          // Handle shader cycling with smooth transitions
+          const shaderCycleInterval = 5000; // 5 seconds display + 2 seconds transition = 7 second total cycle  
+          if (mesh.userData && mesh.userData.shaderMaterials) {
+            const userData = mesh.userData;
+            const timeSinceLastChange = time - userData.lastShaderChange;
+            
+            if (!userData.isTransitioning && timeSinceLastChange > shaderCycleInterval) {
+              // Start transition to next shader
+              userData.isTransitioning = true;
+              userData.transitionProgress = 0;
+              userData.nextShaderIndex = (userData.currentShaderIndex + 1) % userData.shaderMaterials.length;
+              console.log(`Starting transition to: ${userData.shaderMaterials[userData.nextShaderIndex].name}`);
+            }
+            
+            if (userData.isTransitioning) {
+              // Update transition progress
+              const transitionTime = timeSinceLastChange - shaderCycleInterval;
+              userData.transitionProgress = Math.min(transitionTime / userData.transitionDuration, 1.0);
+              
+              // Create transition material
+              const currentMaterial = userData.shaderMaterials[userData.currentShaderIndex];
+              const nextMaterial = userData.shaderMaterials[userData.nextShaderIndex];
+              
+              if (userData.transitionProgress >= 1.0) {
+                // Transition complete
+                userData.isTransitioning = false;
+                userData.currentShaderIndex = userData.nextShaderIndex;
+                mesh.material = nextMaterial.material;
+                userData.lastShaderChange = time;
+                console.log(`Transition complete: ${nextMaterial.name}`);
+                              } else {
+                  // Enhanced smooth transitions for all material types
+                  const blendFactor = userData.transitionProgress;
+                  const smoothBlend = smoothstep(0.0, 1.0, blendFactor); // Smoother easing
+                  
+                  if (currentMaterial.material.type === 'MeshPhysicalMaterial' && 
+                      nextMaterial.material.type === 'MeshPhysicalMaterial') {
+                    
+                    const mat1 = currentMaterial.material;
+                    const mat2 = nextMaterial.material;
+                    
+                    // Create smoothly blended physical material
+                    const blendedMaterial = new THREE.MeshPhysicalMaterial({
+                      color: new THREE.Color().lerpColors(
+                        new THREE.Color(mat1.color || 0xffffff), 
+                        new THREE.Color(mat2.color || 0xffffff), 
+                        smoothBlend
+                      ),
+                      roughness: THREE.MathUtils.lerp(mat1.roughness || 0, mat2.roughness || 0, smoothBlend),
+                      metalness: THREE.MathUtils.lerp(mat1.metalness || 0, mat2.metalness || 0, smoothBlend),
+                      transmission: THREE.MathUtils.lerp(
+                        mat1.transmission || 0, 
+                        mat2.transmission || 0, 
+                        smoothBlend
+                      ),
+                      opacity: THREE.MathUtils.lerp(
+                        mat1.opacity || 1, 
+                        mat2.opacity || 1, 
+                        smoothBlend
+                      ),
+                      transparent: mat1.transparent || mat2.transparent,
+                      clearcoat: THREE.MathUtils.lerp(
+                        mat1.clearcoat || 0, 
+                        mat2.clearcoat || 0, 
+                        smoothBlend
+                      ),
+                      ior: THREE.MathUtils.lerp(mat1.ior || 1.5, mat2.ior || 1.5, smoothBlend),
+                      envMap: mat1.envMap || mat2.envMap,
+                      envMapIntensity: THREE.MathUtils.lerp(
+                        mat1.envMapIntensity || 1, 
+                        mat2.envMapIntensity || 1, 
+                        smoothBlend
+                      )
+                    });
+                    
+                    mesh.material = blendedMaterial;
+                  } else {
+                    // For shader materials, create a blending shader
+                    if (!userData.transitionMaterial) {
+                      userData.transitionMaterial = new THREE.ShaderMaterial({
+                        uniforms: {
+                          time: { value: 0 },
+                          blendFactor: { value: 0 },
+                          envMap: { value: mesh.material.uniforms?.envMap?.value || null }
+                        },
+                        vertexShader: `
+                          varying vec3 vNormal;
+                          varying vec3 vPosition;
+                          varying vec3 vViewDirection;
+                          varying vec3 vWorldPosition;
+                          
+                          void main() {
+                            vNormal = normalize(normalMatrix * normal);
+                            vPosition = position;
+                            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                            vWorldPosition = worldPosition.xyz;
+                            vViewDirection = normalize(cameraPosition - worldPosition.xyz);
+                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                          }
+                        `,
+                        fragmentShader: `
+                          uniform float time;
+                          uniform float blendFactor;
+                          uniform samplerCube envMap;
+                          varying vec3 vNormal;
+                          varying vec3 vPosition;
+                          varying vec3 vViewDirection;
+                          varying vec3 vWorldPosition;
+                          
+                          // Smooth transition function
+                          float smootherstep(float edge0, float edge1, float x) {
+                            x = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+                            return x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
+                          }
+                          
+                          // Get material colors based on current and next shader
+                          vec3 getCurrentColor() {
+                            // This will be dynamically updated based on current shader
+                            return vec3(0.5, 0.8, 1.0); // Default crystal glass
+                          }
+                          
+                          vec3 getNextColor() {
+                            // This will be dynamically updated based on next shader  
+                            return vec3(1.0, 0.4, 0.0); // Default lava
+                          }
+                          
+                          void main() {
+                            vec3 currentColor = getCurrentColor();
+                            vec3 nextColor = getNextColor();
+                            
+                            float smoothBlend = smootherstep(0.0, 1.0, blendFactor);
+                            vec3 finalColor = mix(currentColor, nextColor, smoothBlend);
+                            
+                            gl_FragColor = vec4(finalColor, 1.0);
+                          }
+                        `
+                      });
+                    }
+                    
+                    // Update blend factor and time
+                    userData.transitionMaterial.uniforms.blendFactor.value = smoothBlend;
+                    userData.transitionMaterial.uniforms.time.value = time * 0.001;
+                    mesh.material = userData.transitionMaterial;
+                  }
+                }
+                
+                // Add smoothstep function for smoother transitions
+                function smoothstep(edge0, edge1, x) {
+                  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+                  return t * t * (3 - 2 * t);
+                }
+              
+                             
+                         }
+          }
+
+          // Update shader uniforms for time-based animations
+          if (mesh.material.uniforms && mesh.material.uniforms.time) {
+            mesh.material.uniforms.time.value = time * 0.001;
+          }
+
           // Robust excitement interpolation
           excitementLevelRef.current += (excitementTargetRef.current - excitementLevelRef.current) * Math.min(1, deltaTime * 3);
           const excitementLevel = excitementLevelRef.current;
-
-          // Update colors with time-based transition and excitement
-          const colorArray = geometry.attributes.color.array;
           const t = time * 0.0007 * (1 + excitementLevel * 2);
+
+          // Update colors with unified color scheme
+          const colorArray = geometry.attributes.color.array;
           for (let i = 0; i < colors.length; i += 3) {
             const y = initialPositions[i];
-            const baseHue = 0.6 + 0.2 * (y + 2) / 4;
+            const z = initialPositions[i + 2];
+            
+            // Single unified color scheme with smooth gradient
+            const baseHue = 0.6; // Blue-green base
             const timeOffset = Math.sin(t * 0.5) * 0.2;
             const excitementOffset = Math.sin(t * 2) * 0.2 * excitementLevel;
-            const hue = (baseHue + timeOffset + excitementOffset) % 1;
+            const spatialOffset = Math.sin(y * 0.5 + z * 0.3) * 0.1;
+            const hue = (baseHue + 0.2 * (y + 2) / 4 + timeOffset + excitementOffset + spatialOffset) % 1;
             const color = new THREE.Color().setHSL(hue, 1.0, 0.7);
             colorArray[i] = color.r;
             colorArray[i + 1] = color.g;
             colorArray[i + 2] = color.b;
-          }
-
-          // Smoothly interpolate breath scale with excitement
-          breathScale += (targetBreathScale - breathScale) * Math.min(1, deltaTime * 8);
-          const excitementScale = 1 + Math.sin(time * 0.005) * 0.08 * excitementLevel;
-          mesh.scale.set(breathScale * excitementScale, breathScale * excitementScale, breathScale * excitementScale);
-
-          // Update camera position
-          const optimalDistance = calculateOptimalCameraDistance();
-          camera.position.z = optimalDistance;
-          camera.position.y = 1.5;
-          camera.lookAt(0, 1.5, 0);
-
-          // Enhanced rotation
-          if (!dragActive) {
-            const baseRotationSpeed = 0.01;
-            const excitementRotationSpeed = 0.02;
-            const timeSec = time * 0.001;
-            
-            // Add noise-based rotation variation
-            const noiseX = simplex(timeSec * 0.5, 0, 0, 0) * 0.02;
-            const noiseY = simplex(0, timeSec * 0.5, 0, 0) * 0.02;
-            
-            mesh.rotation.x += baseRotationSpeed + excitementRotationSpeed * excitementLevel + noiseX;
-            mesh.rotation.y += baseRotationSpeed * 0.5 + excitementRotationSpeed * 0.5 * excitementLevel + noiseY;
           }
 
           // Organic blob deformation
@@ -234,27 +592,38 @@ const BackgroundAnimation = () => {
             positions.setXYZ(i, ox * scale, oy * scale, oz * scale);
           }
 
+          // Smoothly interpolate breath scale with excitement
+          breathScale += (targetBreathScale - breathScale) * Math.min(1, deltaTime * 8);
+          const excitementScale = 1 + Math.sin(time * 0.005) * 0.08 * excitementLevel;
+          mesh.scale.set(breathScale * excitementScale, breathScale * excitementScale, breathScale * excitementScale);
+
+          // Update camera position
+          const optimalDistance = calculateOptimalCameraDistance();
+          camera.position.z = optimalDistance;
+          camera.position.y = 1.5;
+          camera.lookAt(0, 1.5, 0);
+
+          // Enhanced rotation
+          if (!dragActive) {
+            const baseRotationSpeed = 0.01;
+            const excitementRotationSpeed = 0.02;
+            const timeSec = time * 0.001;
+            
+            // Add noise-based rotation variation
+            const noiseX = simplex(timeSec * 0.5, 0, 0, 0) * 0.02;
+            const noiseY = simplex(0, timeSec * 0.5, 0, 0) * 0.02;
+            
+            mesh.rotation.x += baseRotationSpeed + excitementRotationSpeed * excitementLevel + noiseX;
+            mesh.rotation.y += baseRotationSpeed * 0.5 + excitementRotationSpeed * 0.5 * excitementLevel + noiseY;
+          }
+
           positions.needsUpdate = true;
           geometry.attributes.color.needsUpdate = true;
           geometry.computeVertexNormals();
 
           renderer.render(scene, camera);
           animationFrameRef.current = requestAnimationFrame(animateFrame);
-          if (time < 1e6) console.log('Animation frame running at time:', time);
         }
-
-        // Calculate optimal camera distance
-        const calculateOptimalCameraDistance = () => {
-          const torusRadius = 2.5 + 0.55;
-          const margin = 1.8;
-          const scaledRadius = torusRadius * breathScale * margin;
-          const fov = camera.fov * (Math.PI / 180);
-          const aspect = camera.aspect;
-          const excitementLevel = excitementLevelRef.current;
-          const fitHeightDistance = scaledRadius / Math.tan(fov / 2);
-          const fitWidthDistance = scaledRadius / (Math.tan(fov / 2) * aspect);
-          return Math.max(fitHeightDistance, fitWidthDistance) * (1 + excitementLevel * 0.1);
-        };
 
         // Mouse event handlers
         const handleMouseDown = (e) => {
@@ -350,12 +719,23 @@ const BackgroundAnimation = () => {
         return;
       }
 
-      const group = new THREE.Group();
-      scene.add(group);
-
-      createTorus().then((mesh) => {
+      createTorusWithShaders().then((mesh) => {
         console.log('Torus created, adding to scene...');
-        group.add(mesh);
+        
+        // Clear any existing meshes from the scene
+        const objectsToRemove = [];
+        scene.traverse((child) => {
+          if (child.type === 'Mesh') {
+            objectsToRemove.push(child);
+          }
+        });
+        objectsToRemove.forEach(obj => {
+          scene.remove(obj);
+          if (obj.geometry) obj.geometry.dispose();
+          if (obj.material) obj.material.dispose();
+        });
+        
+        scene.add(mesh);
         setupLights(scene);
         const cleanupAnimation = animate(mesh, scene, camera, renderer);
         const cleanupResize = handleResize(camera, renderer);
@@ -372,20 +752,49 @@ const BackgroundAnimation = () => {
     // Cleanup function
     return () => {
       console.log('Cleaning up animation');
-      cleanupFunctions.forEach(cleanup => cleanup && cleanup());
-      if (containerRef.current && rendererRef.current) {
-        containerRef.current.removeChild(rendererRef.current.domElement);
+      
+      // Cancel animation frame
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
       }
+      
+      // Run all cleanup functions
+      cleanupFunctions.forEach(cleanup => cleanup && cleanup());
+      
+      // Clear and dispose of scene objects
+      if (sceneRef.current) {
+        sceneRef.current.traverse((child) => {
+          if (child.geometry) child.geometry.dispose();
+          if (child.material) {
+            if (Array.isArray(child.material)) {
+              child.material.forEach(material => material.dispose());
+            } else {
+              child.material.dispose();
+            }
+          }
+        });
+        sceneRef.current.clear();
+        sceneRef.current = null;
+      }
+      
+      // Remove canvas and dispose renderer
+      if (containerRef.current && rendererRef.current?.domElement) {
+        try {
+          containerRef.current.removeChild(rendererRef.current.domElement);
+        } catch (e) {
+          console.log('Canvas already removed');
+        }
+      }
+      
       if (rendererRef.current) {
         rendererRef.current.dispose();
+        rendererRef.current = null;
       }
-      if (meshRef.current) {
-        meshRef.current.geometry.dispose();
-        meshRef.current.material.dispose();
-      }
-      if (sceneRef.current) {
-        sceneRef.current.clear();
-      }
+      
+      // Clear refs
+      meshRef.current = null;
+      cameraRef.current = null;
     };
   }, []);
 

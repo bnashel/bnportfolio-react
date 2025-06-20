@@ -163,10 +163,10 @@ export default function Home() {
     <div className="content fade-in">
       {/* Animated Grid Background */}
       {!isLowPerformance && (
-        <canvas 
-          ref={gridCanvasRef}
-          className="animated-grid-canvas"
-        />
+      <canvas 
+        ref={gridCanvasRef}
+        className="animated-grid-canvas"
+      />
       )}
       
       {/* Gradient Overlays - simplified for low performance */}
