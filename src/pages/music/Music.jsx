@@ -46,23 +46,22 @@ export default function Music({ tracks }) {
                 >
                   {track.title}
                 </span>
-                {isCurrentTrack && (
-                  <audio
-                    ref={audioRef}
-                    src={track.src}
-                    controls
-                    autoPlay
-                    style={{ 
-                      display: 'block', 
-                      margin: '10px 0 0 0', 
-                      width: '100%', 
-                      maxWidth: 400,
-                      opacity: isPlaying ? 1 : 0.7,
-                      transition: 'opacity 0.3s ease'
-                    }}
-                    onEnded={stopTrack}
-                  />
-                )}
+                
+                {/* Always render audio container, animate with CSS */}
+                <div className={`audio-player-container ${isCurrentTrack ? 'expanded' : ''}`}>
+                  {isCurrentTrack && (
+                    <audio
+                      ref={audioRef}
+                      src={track.src}
+                      controls
+                      style={{ 
+                        opacity: isPlaying ? 1 : 0.7,
+                        transition: 'opacity 0.3s ease'
+                      }}
+                      onEnded={stopTrack}
+                    />
+                  )}
+                </div>
               </div>
               <div className="track-details">
                 <div className="track-instr">

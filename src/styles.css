@@ -2,7 +2,7 @@
 body {
   font-family: 'Source Serif Pro', serif;
   margin: 0;
-  background: #f5f0e6 !important;
+  background: linear-gradient(180deg, #f7f7f7 0%, #f1f1f1 100%) !important;
   color: #111;
   min-height: 100vh;
   letter-spacing: 0.01em;
@@ -22,6 +22,7 @@ body {
   padding-bottom: 2rem;
   background: transparent;
   box-sizing: border-box;
+  transition: all 0.3s ease;
 }
 
 /* Consistent spacing for first element on each page */
@@ -53,12 +54,15 @@ body {
   background: none;
   border: none;
   font-family: inherit;
-  transition: all 0.2s ease;
+  padding: 0.5rem 0.7rem;
+  border-radius: 4px;
+  transition: color 0.2s ease, transform 0.3s ease, background 0.2s ease;
 }
 
 .nav a:hover {
   color: #666;
-  transform: translateY(-1.5px) scale(1.01);
+  background: rgba(0,0,0,0.05);
+  transform: translateY(-2px);
 }
 
 /* Header */
@@ -67,10 +71,13 @@ body {
   top: 0;
   left: 0;
   width: 100%;
-  background: #f5f0e6 !important;
+  background: linear-gradient(180deg, rgba(247, 247, 247, 0.95) 0%, rgba(241, 241, 241, 0.9) 100%) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(200, 200, 200, 0.2);
   padding: 1.5rem 0 1rem 0;
   text-align: center;
-  z-index: 3;
+  z-index: 10;
   box-sizing: border-box;
   display: flex;
   flex-direction: row !important;
@@ -93,20 +100,22 @@ body {
   display: inline-block !important;
   width: auto !important;
   text-align: center;
+  transition: color 0.2s ease, transform 0.3s ease, background 0.2s ease;
 }
 
 .fixed-header a:hover {
   color: #666;
-  background: rgba(0,0,0,0.05);
-  transform: translateY(-1.5px) scale(1.01);
-  z-index: 2;
+  transform: translateY(-2px);
+  background: rgba(0, 0, 0, 0.05);
 }
+
+
 
 /* Typography */
 .section-title {
   font-size: 1.5rem;
   font-weight: bold;
-  margin: 2rem 0 1rem;
+  margin: 2.5rem 0 2rem;
   text-align: center;
   font-family: 'Cormorant Garamond', serif;
 }
@@ -136,7 +145,7 @@ body {
   text-decoration: underline;
   font-size: 0.98rem;
   font-family: inherit;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, transform 0.3s ease, background 0.2s ease;
   padding: 0.5rem 1rem;
   border-radius: 4px;
   display: inline-block;
@@ -144,8 +153,8 @@ body {
 
 .bio .social-links a:hover {
   color: #666;
-  background: rgba(0,0,0,0.05);
-  transform: translateY(-1.5px) scale(1.01);
+  background: rgba(0, 0, 0, 0.04);
+  transform: translateY(-2px);
 }
 
 /* Animations */
@@ -220,12 +229,18 @@ img, .artwork-placeholder {
   max-width: min(700px, 90%);
   display: block;
   margin: 2.5rem auto 1.2rem auto;
-  background: #f3f3f3;
+  background: 
+    radial-gradient(circle at 38% 68%, rgba(67, 56, 202, 0.09) 0%, transparent 45%),
+    radial-gradient(circle at 62% 42%, rgba(30, 64, 175, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 48% 18%, rgba(55, 48, 163, 0.07) 0%, transparent 50%),
+    radial-gradient(circle at 32% 72%, rgba(107, 70, 193, 0.06) 0%, transparent 50%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(252, 252, 252, 0.7) 100%);
   border-radius: 12px;
   /* min-height: 220px; */
   /* Remove pop effect from images */
   transition: none;
   box-sizing: border-box;
+  animation: artBackgroundShift 80s ease-in-out infinite alternate;
 }
 
 .centered {
@@ -235,12 +250,15 @@ img, .artwork-placeholder {
 /* Music page specific */
 .tracklist {
   max-width: min(600px, 90%);
-  margin: 2.5rem auto;
+  margin: 0.5rem auto;
   font-size: clamp(1rem, 1.5vw, 1.1rem);
   line-height: 2.2;
   padding: 0 1rem;
   box-sizing: border-box;
+  transition: all 0.3s ease;
 }
+
+
 
 .track-link {
   display: inline-block;
@@ -255,12 +273,15 @@ img, .artwork-placeholder {
   color: #232323;
   letter-spacing: 0.01em;
   font-weight: 400;
+  padding: 0.4rem 0.7rem;
+  border-radius: 4px;
+  transition: color 0.2s ease, transform 0.3s ease, background 0.2s ease;
 }
 
 .track-link:hover {
   color: #666;
-  background: rgba(0,0,0,0.05);
-  transform: translateY(-1.5px) scale(1.01);
+  background: rgba(0, 0, 0, 0.04);
+  transform: translateY(-2px);
 }
 
 .audio-player {
@@ -274,7 +295,7 @@ img, .artwork-placeholder {
 }
 
 .page-content-top {
-  padding-top: 5.2rem;
+  padding-top: 4.2rem;
 }
 
 /* Media Queries */
@@ -373,7 +394,7 @@ img, .artwork-placeholder {
   }
   .section-title {
     font-size: 1.1rem;
-    margin: 1.2rem 0 0.7rem;
+    margin: 2rem 0 1.5rem;
     max-width: 92%;
     margin-left: auto;
     margin-right: auto;
@@ -401,7 +422,7 @@ img, .artwork-placeholder {
     max-width: 92%;
     margin-left: auto;
     margin-right: auto;
-    margin-top: 0.4rem;
+    margin-top: 0rem;
   }
   .track-link {
     font-size: 1rem;
@@ -412,13 +433,13 @@ img, .artwork-placeholder {
   }
   /* New adjustments for consistent mobile spacing */
   .page-content-top {
-    padding-top: 3.5rem;
+    padding-top: 2.8rem;
   }
   .bio img {
     margin-top: 3.5rem;
   }
   .tracklist {
-    margin-top: 0.4rem;
+    margin-top: 0rem;
   }
   .centered {
     margin-bottom: 1.5rem;
@@ -449,29 +470,41 @@ img, .artwork-placeholder {
 }
 
 .track-card {
-  background: #f6efe2;
+  background: 
+    radial-gradient(circle at 28% 73%, rgba(120, 120, 120, 0.025) 0%, transparent 60%),
+    radial-gradient(circle at 67% 27%, rgba(140, 140, 140, 0.02) 0%, transparent 60%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(252, 252, 252, 0.9) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: 14px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   padding: 0.5rem 1rem 0.5rem 1rem;
   margin: 2rem auto 2rem auto;
   max-width: 900px;
   min-width: 0;
   width: 100%;
-  transition: box-shadow 0.2s;
-  border: 1px solid #ece6da;
+  transition: box-shadow 0.2s ease, transform 0.3s ease, margin 0.3s ease, background 0.3s ease;
+  border: 1px solid rgba(200, 200, 200, 0.3);
   overflow: visible;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  cursor: pointer;
 }
 .track-card:hover {
-  box-shadow: 0 4px 18px rgba(0,0,0,0.13);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  background: 
+    radial-gradient(circle at 28% 73%, rgba(120, 120, 120, 0.035) 0%, transparent 60%),
+    radial-gradient(circle at 67% 27%, rgba(140, 140, 140, 0.03) 0%, transparent 60%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(252, 252, 252, 0.95) 100%);
 }
 .track-title-col {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   width: 100%;
+  transition: all 0.3s ease;
 }
 .track-card audio {
   min-width: 220px;
@@ -488,6 +521,7 @@ img, .artwork-placeholder {
   gap: 0.1rem;
   align-items: flex-start;
   width: 100%;
+  transition: all 0.3s ease;
 }
 .track-instr {
   font-style: italic;
@@ -529,4 +563,199 @@ img, .artwork-placeholder {
 }
 .home-title-fixed {
   font-weight: 400;
+}
+
+/* Animated Grid Background */
+.animated-grid-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -3;
+  pointer-events: none;
+  background: transparent;
+}
+
+/* Gradient Overlay Container */
+.gradient-overlay-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -2;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.gradient-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  mix-blend-mode: soft-light;
+  opacity: 0.4;
+}
+
+.gradient-overlay-1 {
+  background: radial-gradient(
+    circle at 18% 84%, 
+    rgba(67, 56, 202, 0.12) 0%, 
+    transparent 50%
+  );
+  animation: gradientFloat1 25s ease-in-out infinite alternate;
+}
+
+.gradient-overlay-2 {
+  background: radial-gradient(
+    circle at 83% 17%, 
+    rgba(107, 70, 193, 0.10) 0%, 
+    transparent 50%
+  );
+  animation: gradientFloat2 30s ease-in-out infinite alternate-reverse;
+  animation-delay: -10s;
+}
+
+.gradient-overlay-3 {
+  background: radial-gradient(
+    circle at 47% 53%, 
+    rgba(30, 64, 175, 0.08) 0%, 
+    transparent 60%
+  );
+  animation: gradientFloat3 35s ease-in-out infinite alternate;
+  animation-delay: -5s;
+}
+
+@keyframes gradientFloat1 {
+  0% { 
+    transform: translate(0, 0) scale(1);
+    opacity: 0.3;
+  }
+  100% { 
+    transform: translate(30px, -20px) scale(1.1);
+    opacity: 0.5;
+  }
+}
+
+@keyframes gradientFloat2 {
+  0% { 
+    transform: translate(0, 0) scale(1);
+    opacity: 0.2;
+  }
+  100% { 
+    transform: translate(-25px, 30px) scale(1.15);
+    opacity: 0.4;
+  }
+}
+
+@keyframes gradientFloat3 {
+  0% { 
+    transform: translate(0, 0) scale(1);
+    opacity: 0.15;
+  }
+  100% { 
+    transform: translate(15px, -15px) scale(0.95);
+    opacity: 0.35;
+  }
+}
+
+/* Subtle art background animation */
+@keyframes artBackgroundShift {
+  0% { 
+    background: 
+      radial-gradient(circle at 38% 68%, rgba(67, 56, 202, 0.09) 0%, transparent 45%),
+      radial-gradient(circle at 62% 42%, rgba(30, 64, 175, 0.08) 0%, transparent 45%),
+      radial-gradient(circle at 48% 18%, rgba(55, 48, 163, 0.07) 0%, transparent 50%),
+      radial-gradient(circle at 32% 72%, rgba(107, 70, 193, 0.06) 0%, transparent 50%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(252, 252, 252, 0.7) 100%);
+  }
+  50% { 
+    background: 
+      radial-gradient(circle at 42% 72%, rgba(67, 56, 202, 0.10) 0%, transparent 48%),
+      radial-gradient(circle at 58% 38%, rgba(30, 64, 175, 0.09) 0%, transparent 47%),
+      radial-gradient(circle at 52% 22%, rgba(55, 48, 163, 0.08) 0%, transparent 52%),
+      radial-gradient(circle at 28% 68%, rgba(107, 70, 193, 0.07) 0%, transparent 52%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.87) 0%, rgba(252, 252, 252, 0.72) 100%);
+  }
+  100% { 
+    background: 
+      radial-gradient(circle at 36% 64%, rgba(67, 56, 202, 0.085) 0%, transparent 47%),
+      radial-gradient(circle at 64% 46%, rgba(30, 64, 175, 0.075) 0%, transparent 46%),
+      radial-gradient(circle at 44% 14%, rgba(55, 48, 163, 0.065) 0%, transparent 51%),
+      radial-gradient(circle at 34% 76%, rgba(107, 70, 193, 0.055) 0%, transparent 51%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.86) 0%, rgba(252, 252, 252, 0.71) 100%);
+  }
+}
+
+
+
+
+
+
+
+/* Consistent background across all pages */
+body {
+  background: linear-gradient(180deg, #f7f7f7 0%, #f1f1f1 100%) !important;
+}
+
+/* Mobile responsiveness for grid */
+@media screen and (max-width: 768px) {
+  .gradient-overlay {
+    opacity: 0.25;
+  }
+  
+  .gradient-overlay-1, .gradient-overlay-2, .gradient-overlay-3 {
+    animation-duration: 20s;
+  }
+}
+
+/* Accessibility: Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .gradient-overlay {
+    animation: none;
+  }
+  
+  .animated-grid-canvas {
+    display: none;
+  }
+}
+
+/* Audio player animations */
+.audio-player-container {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform-origin: top;
+  transition: max-height 0.3s ease, 
+              opacity 0.25s ease 0.05s;
+  margin: 0;
+  padding: 0;
+}
+
+.audio-player-container.expanded {
+  max-height: 120px;
+  opacity: 1;
+  margin: 15px 0 5px 0;
+  padding: 5px 0;
+}
+
+.audio-player-container audio {
+  width: 100%;
+  max-width: 600px;
+  min-width: 320px;
+  height: 54px;
+  transition: opacity 0.3s ease;
+  display: block;
+  min-height: 54px;
+}
+
+/* Smooth layout coordination for all track interactions */
+.track-title-col {
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.track-details {
+  transition: all 0.3s ease;
+  width: 100%;
 } 

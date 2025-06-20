@@ -5,7 +5,6 @@ import {
   Link,
   useLocation
 } from 'react-router-dom';
-import { createContext, useRef, useState, useEffect, useContext } from 'react';
 import Home from './pages/home/Home';
 import About from './pages/about/About';
 import Art from './pages/art/Art';
@@ -46,55 +45,7 @@ const tracks = [
   },
 ];
 
-export const AudioCtx = createContext();
-
-function AudioProvider({ children }) {
-  const audioRef = useRef(null);
-  const [currentTrack, setCurrentTrack] = useState(null);
-
-  // Play a track
-  const play = (src) => {
-    if (audioRef.current) {
-      if (audioRef.current.src !== window.location.origin + src) {
-        audioRef.current.src = src;
-      }
-      audioRef.current.volume = 1;
-      audioRef.current.currentTime = 0;
-      audioRef.current.play();
-      setCurrentTrack(src);
-    }
-  };
-
-  // Stop immediately
-  const stop = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      audioRef.current.volume = 1;
-      setCurrentTrack(null);
-    }
-  };
-
-  // Hide player when audio is paused or ended
-  const handleHide = () => {
-    setCurrentTrack(null);
-  };
-
-  return (
-    <AudioCtx.Provider value={{ audioRef, play, stop, currentTrack }}>
-      {children}
-    </AudioCtx.Provider>
-  );
-}
-
 function AppContent() {
-  const { play } = useContext(AudioCtx);
-
-  // This function will be passed to Music.jsx
-  const playTrack = (src) => {
-    play(src);
-  };
-
   return (
     <>
       <div className="fixed-header">
@@ -109,7 +60,7 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/art" element={<Art />} />
-          <Route path="/music" element={<Music tracks={tracks} playTrack={playTrack} />} />
+          <Route path="/music" element={<Music tracks={tracks} />} />
           <Route path="/movies-books" element={<MoviesBooks />} />
         </Routes>
       </div>
@@ -120,9 +71,7 @@ function AppContent() {
 export default function App() {
   return (
     <Router>
-      <AudioProvider>
-        <AppContent />
-      </AudioProvider>
+      <AppContent />
     </Router>
   );
 } 
