@@ -1,10 +1,39 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import BackgroundAnimation from '../../components/BackgroundAnimation';
+import SimpleBackground from '../../components/SimpleBackground';
+import { usePerformanceMode } from '../../hooks/usePerformanceMode';
+
+// Throttle function for performance optimization
+const throttle = (func, delay) => {
+  let timeoutId;
+  let lastExecTime = 0;
+  return function (...args) {
+    const currentTime = Date.now();
+    
+    if (currentTime - lastExecTime > delay) {
+      func(...args);
+      lastExecTime = currentTime;
+    } else {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func(...args);
+        lastExecTime = Date.now();
+      }, delay - (currentTime - lastExecTime));
+    }
+  };
+};
 
 export default function Home() {
   const titleRef = useRef(null);
   const gridCanvasRef = useRef(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const { isLowPerformance } = usePerformanceMode();
+  
+  // Throttle mouse movement for better performance
+  const throttledSetMousePosition = useCallback(
+    throttle((x, y) => setMousePosition({ x, y }), isLowPerformance ? 100 : 16),
+    [isLowPerformance]
+  );
 
   // One-time setup effect (typing animation, scroll prevention, mouse handler)
   useEffect(() => {
@@ -15,6 +44,10 @@ export default function Home() {
     const text = "Hi, I'm Benjamin Nashel";
     let index = 0;
     titleRef.current.textContent = '';
+    
+    // Faster typing for low performance devices
+    const typingSpeed = isLowPerformance ? 50 : 100;
+    
     const typingInterval = setInterval(() => {
       if (index < text.length) {
         titleRef.current.textContent += text.charAt(index);
@@ -22,16 +55,16 @@ export default function Home() {
       } else {
         clearInterval(typingInterval);
       }
-    }, 100);
+    }, typingSpeed);
 
     // Mouse move handler for interactive effects
     const handleMouseMove = (e) => {
       const x = (e.clientX / window.innerWidth);
       const y = (e.clientY / window.innerHeight);
-      setMousePosition({ x, y });
+      throttledSetMousePosition(x, y);
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
     return () => {
       clearInterval(typingInterval);
@@ -61,19 +94,19 @@ export default function Home() {
       const drawGrid = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Grid properties
-        const gridSize = 60;
+        // Performance-aware grid properties
+        const gridSize = isLowPerformance ? 80 : 60;
         const lineWidth = 1;
-        const baseOpacity = 0.1;
+        const baseOpacity = isLowPerformance ? 0.05 : 0.1;
         
-        // Mouse influence
-        const mouseInfluence = 150;
+        // Mouse influence (reduced for low performance)
+        const mouseInfluence = isLowPerformance ? 100 : 150;
         const mouseX = mousePosition.x * canvas.width;
         const mouseY = mousePosition.y * canvas.height;
         
-        // Animated wave effect
-        const waveSpeed = 0.002;
-        const waveAmplitude = 0.3;
+        // Animated wave effect (slower for low performance)
+        const waveSpeed = isLowPerformance ? 0.001 : 0.002;
+        const waveAmplitude = isLowPerformance ? 0.15 : 0.3;
         
         // Draw vertical lines
         for (let x = 0; x <= canvas.width; x += gridSize) {
@@ -129,20 +162,22 @@ export default function Home() {
   return (
     <div className="content fade-in">
       {/* Animated Grid Background */}
-      <canvas 
-        ref={gridCanvasRef}
-        className="animated-grid-canvas"
-      />
+      {!isLowPerformance && (
+        <canvas 
+          ref={gridCanvasRef}
+          className="animated-grid-canvas"
+        />
+      )}
       
-      {/* Gradient Overlays */}
+      {/* Gradient Overlays - simplified for low performance */}
       <div className="gradient-overlay-container">
         <div className="gradient-overlay gradient-overlay-1"></div>
-        <div className="gradient-overlay gradient-overlay-2"></div>
-        <div className="gradient-overlay gradient-overlay-3"></div>
+        {!isLowPerformance && <div className="gradient-overlay gradient-overlay-2"></div>}
+        {!isLowPerformance && <div className="gradient-overlay gradient-overlay-3"></div>}
       </div>
       
       <div className="home-title-fixed" ref={titleRef}></div>
-      <BackgroundAnimation />
+      {isLowPerformance ? <SimpleBackground /> : <BackgroundAnimation />}
     </div>
   );
 } 
