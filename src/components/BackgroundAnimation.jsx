@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTheme } from 'next-themes';
 import * as THREE from 'three';
 import { createNoise4D } from 'simplex-noise';
 
@@ -18,6 +19,9 @@ const BackgroundAnimation = () => {
   const excitementTargetRef = useRef(0);
   const excitementLevelRef = useRef(0);
   const [error, setError] = useState(null);
+  
+  // Get current theme
+  const { theme } = useTheme();
 
   // Error boundary component
   if (error) {
@@ -100,7 +104,7 @@ const BackgroundAnimation = () => {
         // Create different shader materials
         const createShaderMaterials = (envMap) => {
           const materials = [
-            // 1. Crystal Glass
+            // 0. Crystal Glass
             {
               name: "Crystal Glass",
               material: new THREE.MeshPhysicalMaterial({
@@ -119,7 +123,7 @@ const BackgroundAnimation = () => {
               })
             },
             
-            // 2. Molten Lava
+            // 1. Molten Lava
             {
               name: "Molten Lava",
               material: new THREE.ShaderMaterial({
@@ -164,7 +168,7 @@ const BackgroundAnimation = () => {
               })
             },
             
-            // 3. Digital Matrix
+            // 2. Digital Matrix
             {
               name: "Digital Matrix",
               material: new THREE.ShaderMaterial({
@@ -215,7 +219,7 @@ const BackgroundAnimation = () => {
               })
             },
             
-            // 4. Liquid Gold
+            // 3. Liquid Gold
             {
               name: "Liquid Gold",
               material: new THREE.ShaderMaterial({
@@ -296,15 +300,16 @@ const BackgroundAnimation = () => {
             
             const shaderMaterials = createShaderMaterials(envMap);
             
-            // Create torus with first material
+            // Create torus with first shader (Crystal Glass)
             const geometry = createGeometry();
-            const mesh = new THREE.Mesh(geometry, shaderMaterials[0].material);
+            const initialIndex = 0; // Always start with Crystal Glass
+            const mesh = new THREE.Mesh(geometry, shaderMaterials[initialIndex].material);
             mesh.position.y = 1.5;
             
             // Store references for cycling
             mesh.userData = { 
               shaderMaterials,
-              currentShaderIndex: 0,
+              currentShaderIndex: initialIndex,
               lastShaderChange: 0
             };
             meshRef.current = mesh;
@@ -374,14 +379,15 @@ const BackgroundAnimation = () => {
           const deltaTime = (time - lastTimeRef.current) / 1000;
           lastTimeRef.current = time;
 
-                    // Handle instant shader cycling
+                    // Handle shader cycling (all shaders available)
           const shaderCycleInterval = 4000; // 4 seconds per shader
           if (mesh.userData && mesh.userData.shaderMaterials) {
             const userData = mesh.userData;
             const timeSinceLastChange = time - userData.lastShaderChange;
             
+            // Cycle through all shaders regardless of theme
             if (timeSinceLastChange > shaderCycleInterval) {
-              // Switch to next shader instantly
+              // Cycle to next shader (all 4 shaders available)
               userData.currentShaderIndex = (userData.currentShaderIndex + 1) % userData.shaderMaterials.length;
               const newMaterial = userData.shaderMaterials[userData.currentShaderIndex];
               mesh.material = newMaterial.material;

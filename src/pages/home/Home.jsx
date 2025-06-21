@@ -73,101 +73,102 @@ export default function Home() {
     };
   }, []); // No dependencies - runs only once
 
-  // Grid animation effect - separate from typing animation
-  useEffect(() => {
-    const setupAnimatedGrid = () => {
-      const canvas = gridCanvasRef.current;
-      if (!canvas) return;
+  // Grid animation effect - DISABLED
+  // useEffect(() => {
+  //   const setupAnimatedGrid = () => {
+  //     const canvas = gridCanvasRef.current;
+  //     if (!canvas) return;
 
-      const ctx = canvas.getContext('2d');
-      const resize = () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-      };
+  //     const ctx = canvas.getContext('2d');
+  //     const resize = () => {
+  //       canvas.width = window.innerWidth;
+  //       canvas.height = window.innerHeight;
+  //     };
       
-      resize();
-      window.addEventListener('resize', resize);
+  //     resize();
+  //     window.addEventListener('resize', resize);
 
-      let animationId;
-      let time = 0;
+  //     let animationId;
+  //     let time = 0;
 
-      const drawGrid = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+  //     const drawGrid = () => {
+  //       ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Performance-aware grid properties
-        const gridSize = isLowPerformance ? 80 : 60;
-        const lineWidth = 1;
-        const baseOpacity = isLowPerformance ? 0.05 : 0.1;
+  //       // Performance-aware grid properties
+  //       const gridSize = isLowPerformance ? 80 : 60;
+  //       const lineWidth = 1;
+  //       const isDarkMode = document.documentElement.classList.contains('dark');
+  //       const baseOpacity = isLowPerformance ? 0.05 : (isDarkMode ? 0.06 : 0.1);
         
-        // Mouse influence (reduced for low performance)
-        const mouseInfluence = isLowPerformance ? 100 : 150;
-        const mouseX = mousePosition.x * canvas.width;
-        const mouseY = mousePosition.y * canvas.height;
+  //       // Mouse influence (reduced for low performance)
+  //       const mouseInfluence = isLowPerformance ? 100 : 150;
+  //       const mouseX = mousePosition.x * canvas.width;
+  //       const mouseY = mousePosition.y * canvas.height;
         
-        // Animated wave effect (slower for low performance)
-        const waveSpeed = isLowPerformance ? 0.001 : 0.002;
-        const waveAmplitude = isLowPerformance ? 0.15 : 0.3;
+  //       // Animated wave effect (slower for low performance)
+  //       const waveSpeed = isLowPerformance ? 0.001 : 0.002;
+  //       const waveAmplitude = isLowPerformance ? 0.15 : 0.3;
         
-        // Draw vertical lines
-        for (let x = 0; x <= canvas.width; x += gridSize) {
-          for (let y = 0; y <= canvas.height; y += gridSize) {
-            const distanceToMouse = Math.sqrt(Math.pow(x - mouseX, 2) + Math.pow(y - mouseY, 2));
-            const mouseEffect = Math.max(0, 1 - distanceToMouse / mouseInfluence);
+  //       // Draw vertical lines
+  //       for (let x = 0; x <= canvas.width; x += gridSize) {
+  //         for (let y = 0; y <= canvas.height; y += gridSize) {
+  //           const distanceToMouse = Math.sqrt(Math.pow(x - mouseX, 2) + Math.pow(y - mouseY, 2));
+  //           const mouseEffect = Math.max(0, 1 - distanceToMouse / mouseInfluence);
             
-            const wave = Math.sin((x + y) * 0.01 + time * waveSpeed) * waveAmplitude;
-            const opacity = baseOpacity + mouseEffect * 0.4 + wave * 0.1;
+  //           const wave = Math.sin((x + y) * 0.01 + time * waveSpeed) * waveAmplitude;
+  //           const opacity = baseOpacity + mouseEffect * 0.4 + wave * 0.1;
             
-            const hue = (time * 0.05 + x * 0.1 + y * 0.1) % 360;
-            ctx.strokeStyle = `hsla(${hue}, 70%, 60%, ${Math.min(opacity, 0.8)})`;
-            ctx.lineWidth = lineWidth + mouseEffect * 2;
+  //           const hue = (time * 0.05 + x * 0.1 + y * 0.1) % 360;
+  //           ctx.strokeStyle = `hsla(${hue}, 70%, 60%, ${Math.min(opacity, 0.8)})`;
+  //           ctx.lineWidth = lineWidth + mouseEffect * 2;
             
-            // Vertical line
-            if (x <= canvas.width) {
-              ctx.beginPath();
-              ctx.moveTo(x, y);
-              ctx.lineTo(x, Math.min(y + gridSize, canvas.height));
-              ctx.stroke();
-            }
+  //           // Vertical line
+  //           if (x <= canvas.width) {
+  //             ctx.beginPath();
+  //             ctx.moveTo(x, y);
+  //             ctx.lineTo(x, Math.min(y + gridSize, canvas.height));
+  //             ctx.stroke();
+  //           }
             
-            // Horizontal line  
-            if (y <= canvas.height) {
-              ctx.beginPath();
-              ctx.moveTo(x, y);
-              ctx.lineTo(Math.min(x + gridSize, canvas.width), y);
-              ctx.stroke();
-            }
-          }
-        }
+  //           // Horizontal line  
+  //           if (y <= canvas.height) {
+  //             ctx.beginPath();
+  //             ctx.moveTo(x, y);
+  //             ctx.lineTo(Math.min(x + gridSize, canvas.width), y);
+  //             ctx.stroke();
+  //           }
+  //         }
+  //       }
         
-        time++;
-        animationId = requestAnimationFrame(drawGrid);
-      };
+  //       time++;
+  //       animationId = requestAnimationFrame(drawGrid);
+  //     };
 
-      drawGrid();
+  //     drawGrid();
       
-      return () => {
-        window.removeEventListener('resize', resize);
-        if (animationId) {
-          cancelAnimationFrame(animationId);
-        }
-      };
-    };
+  //     return () => {
+  //       window.removeEventListener('resize', resize);
+  //       if (animationId) {
+  //         cancelAnimationFrame(animationId);
+  //       }
+  //     };
+  //   };
 
-    const gridCleanup = setupAnimatedGrid();
-    return () => {
-      if (gridCleanup) gridCleanup();
-    };
-  }, [mousePosition.x, mousePosition.y]); // Only grid depends on mouse position
+  //   const gridCleanup = setupAnimatedGrid();
+  //   return () => {
+  //     if (gridCleanup) gridCleanup();
+  //   };
+  // }, [mousePosition.x, mousePosition.y]); // Only grid depends on mouse position
 
   return (
     <div className="content fade-in">
-      {/* Animated Grid Background */}
-      {!isLowPerformance && (
+      {/* Animated Grid Background - DISABLED */}
+      {/* {!isLowPerformance && (
       <canvas 
         ref={gridCanvasRef}
         className="animated-grid-canvas"
       />
-      )}
+      )} */}
       
       {/* Gradient Overlays - simplified for low performance */}
       <div className="gradient-overlay-container">
