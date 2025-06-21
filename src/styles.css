@@ -41,12 +41,8 @@ body {
 }
 
 /* Consistent spacing for first element on each page */
-.page-top {
-  margin-top: 5rem;
-}
-
 .page-content-top {
-  padding-top: 4.2rem;
+  padding-top: 4.5rem;
 }
 
 /* Bio section */
@@ -169,23 +165,23 @@ body.home-no-scroll {
 }
 
 /* Art page specific */
-img, .artwork-placeholder {
+.art-image, .artwork-placeholder, .about-photo {
   width: 100%;
   max-width: min(700px, 90%);
   display: block;
   margin: 2.5rem auto 1.2rem auto;
-  background: 
-    radial-gradient(circle at 38% 68%, rgba(67, 56, 202, 0.09) 0%, transparent 45%),
-    radial-gradient(circle at 62% 42%, rgba(30, 64, 175, 0.08) 0%, transparent 45%),
-    radial-gradient(circle at 48% 18%, rgba(55, 48, 163, 0.07) 0%, transparent 50%),
-    radial-gradient(circle at 32% 72%, rgba(107, 70, 193, 0.06) 0%, transparent 50%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(252, 252, 252, 0.7) 100%);
   border-radius: 12px;
-  /* min-height: 220px; */
-  /* Remove pop effect from images */
   transition: none;
   box-sizing: border-box;
-  animation: artBackgroundShift 80s ease-in-out infinite alternate;
+}
+
+/* About page photo - ensure it displays fully */
+.about-photo {
+  object-fit: contain !important;
+  height: auto !important;
+  background: none !important;
+  animation: none !important;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
 }
 
 .centered {
@@ -487,6 +483,7 @@ img, .artwork-placeholder {
 .art-image-container {
   padding: 0 clamp(1rem, 3vw, 2rem);
   box-sizing: border-box;
+  margin-top: 1rem;
 }
 
 .home-title-fixed, .section-title {
@@ -644,12 +641,16 @@ img, .artwork-placeholder {
     padding: 0.25rem 0.4rem !important;
   }
   
-  .page-top {
-    margin-top: 4rem;
+  .page-content-top {
+    padding-top: 4rem;
   }
   
   .bio {
     padding: 0 1rem;
+  }
+  
+  .art-image, .artwork-placeholder, .about-photo {
+    margin: 2rem auto 1rem auto;
   }
 }
 
@@ -678,8 +679,12 @@ img, .artwork-placeholder {
     margin: 0 !important;
   }
   
-  .page-top {
-    margin-top: 3.5rem;
+  .page-content-top {
+    padding-top: 3.5rem;
+  }
+  
+  .art-image, .artwork-placeholder, .about-photo {
+    margin: 1.5rem auto 0.8rem auto;
   }
 }
 
