@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import BackgroundAnimation from '../../components/BackgroundAnimation';
 import SimpleBackground from '../../components/SimpleBackground';
+import PhysicsTitle from '../../components/PhysicsTitle';
 import { usePerformanceMode } from '../../hooks/usePerformanceMode';
 
 // Throttle function for performance optimization
@@ -24,7 +25,6 @@ const throttle = (func, delay) => {
 };
 
 export default function Home() {
-  const titleRef = useRef(null);
   const gridCanvasRef = useRef(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const { isLowPerformance } = usePerformanceMode();
@@ -35,27 +35,10 @@ export default function Home() {
     [isLowPerformance]
   );
 
-  // One-time setup effect (typing animation, scroll prevention, mouse handler)
+  // One-time setup effect (scroll prevention, mouse handler)
   useEffect(() => {
     // Prevent scrolling on homepage
     document.body.classList.add('home-no-scroll');
-    
-    // Typing animation - runs only once
-    const text = "Hi, I'm Benjamin Nashel";
-    let index = 0;
-    titleRef.current.textContent = '';
-    
-    // Faster typing for low performance devices
-    const typingSpeed = isLowPerformance ? 50 : 100;
-    
-    const typingInterval = setInterval(() => {
-      if (index < text.length) {
-        titleRef.current.textContent += text.charAt(index);
-        index++;
-      } else {
-        clearInterval(typingInterval);
-      }
-    }, typingSpeed);
 
     // Mouse move handler for interactive effects
     const handleMouseMove = (e) => {
@@ -67,7 +50,6 @@ export default function Home() {
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
     return () => {
-      clearInterval(typingInterval);
       document.body.classList.remove('home-no-scroll');
       window.removeEventListener('mousemove', handleMouseMove);
     };
@@ -177,7 +159,7 @@ export default function Home() {
         {!isLowPerformance && <div className="gradient-overlay gradient-overlay-3"></div>}
       </div>
       
-      <div className="home-title-fixed" ref={titleRef}></div>
+      <PhysicsTitle />
       {isLowPerformance ? <SimpleBackground /> : <BackgroundAnimation />}
     </div>
   );

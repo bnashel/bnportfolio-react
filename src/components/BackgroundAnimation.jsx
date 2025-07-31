@@ -65,7 +65,7 @@ const BackgroundAnimation = () => {
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
         camera.position.z = 28;
-        camera.position.y = 1.5;
+        camera.position.y = 6.0;
         rendererRef.current = renderer;
         cameraRef.current = camera;
         sceneRef.current = scene;
@@ -304,7 +304,7 @@ const BackgroundAnimation = () => {
             const geometry = createGeometry();
             const initialIndex = 0; // Always start with Crystal Glass
             const mesh = new THREE.Mesh(geometry, shaderMaterials[initialIndex].material);
-            mesh.position.y = 1.5;
+            mesh.position.y = 6.0;
             
             // Store references for cycling
             mesh.userData = { 
@@ -467,8 +467,8 @@ const BackgroundAnimation = () => {
           // Update camera position
           const optimalDistance = calculateOptimalCameraDistance();
           camera.position.z = optimalDistance;
-          camera.position.y = 1.5;
-          camera.lookAt(0, 1.5, 0);
+          camera.position.y = 6.0;
+          camera.lookAt(0, 6.0, 0);
 
           // Enhanced rotation
           if (!dragActive) {
