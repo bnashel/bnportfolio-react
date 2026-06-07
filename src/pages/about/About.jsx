@@ -17,11 +17,11 @@ export default function About() {
         </div>
         <div className="bio">
           <div style={{ textAlign: 'left', marginBottom: '2rem' }}>
-            I'm originally from Brooklyn and currently a student at Vanderbilt University, studying Economics and Philosophy, with a minor in History.<br /><br />
+            I'm originally from Brooklyn and currently a student at Vanderbilt University, studying Economics and History.<br /><br />
             I attended the Packer Collegiate Institute from 2020 to 2024 and spent most of high school focused on classical piano and composing electronic music. This inspired me to start a music tutoring nonprofit called InTune. We had lessons running across three continents by the time I graduated.<br /><br />
-            During my freshman year at Vanderbilt, I co-founded GradPad, a marketplace helping young people navigate the New York housing market. We inverted the outdated search model by using AI to prefilter listings based on a user's true preferences.<br /><br />
-            Most recently, I worked at an AI-native marketing software startup called Enttor, where we built tools that help consumer brands scale content efficiently.<br /><br />
-            And right now I'm figuring out what I want to do next…
+            I also have a deep love for historical research—particularly the Boasian Circle and early cultural anthropology. I'm fascinated by how notions of culture travel across time and geography, and I've spent the past few years exploring those connections through archival research and academic writing.<br /><br />
+            Now at Vanderbilt, I'm working at an AI-native marketing software startup called Enttor, where we build tools that help consumer brands scale content efficiently without losing their creative voice.<br /><br />
+            Across music, research, and startups, I'm drawn to the same core impulse: using ideas to build something lasting and something that connects people. Whether composing a piece, tracing the evolution of cultural theory, or launching a product, I'm motivated by a curiosity about how things fit together and a desire to shape systems that help others express themselves more fully.
           </div>
           <div className="social-links">
             <a href="https://www.instagram.com/bnashel/" target="_blank" rel="noopener noreferrer">Instagram</a>
