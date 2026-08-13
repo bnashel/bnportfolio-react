@@ -1,15 +1,12 @@
+import { lazy, Suspense, useEffect } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Link,
+  NavLink,
   useLocation
 } from 'react-router-dom';
 import Home from './pages/home/Home';
-import About from './pages/about/About';
-import Art from './pages/art/Art';
-import Music from './pages/music/Music';
-import MoviesBooks from './pages/movies-books/MoviesBooks';
 import ThemeProvider from './components/ThemeProvider';
 import ThemeToggle from './components/ThemeToggle';
 import blueWave from './assets/music/Blue Wave.m4a';
@@ -17,61 +14,84 @@ import drumBuddy from './assets/music/Drum Buddy long H 011024.m4a';
 import morningPhase from './assets/music/Morning Phase.m4a';
 import goldenGod from './assets/music/The Golden God.m4a';
 import inevitableCycle from './assets/music/The Inevitable Cycle.m4a';
-import './styles.css';
+
+const About = lazy(() => import('./pages/about/About'));
+const Art = lazy(() => import('./pages/art/Art'));
+const Music = lazy(() => import('./pages/music/Music'));
+const MoviesBooks = lazy(() => import('./pages/movies-books/MoviesBooks'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 const tracks = [
   {
     title: 'Blue Wave',
-    desc: 'Sound: Warm, sustained, with slow attack and low-pass filtering\nInstrumentation: Arturia Prophet V, Felt Piano, Serum (analog waveforms), Omnisphere',
     src: blueWave,
   },
   {
     title: 'Drum Buddy',
-    desc: 'Sound: Lo-fi, percussive, experimental with analog grit\nInstrumentation: Custom hardware drum synth (Drum Buddy), Modular V, RC-20',
     src: drumBuddy,
   },
   {
     title: 'Morning Phase',
-    desc: 'Sound: Intimate, ambient, cinematic with soft dynamics\nInstrumentation: Felt Piano, Kontakt textures, B3 organ emulation, Valhalla Shimmer',
     src: morningPhase,
   },
   {
     title: 'The Golden God',
-    desc: 'Sound: Distorted, analog-heavy, energetic with punch\nInstrumentation: Arturia Mini V, u-he Diva, Maschine drum rack, Serum sub bass, Stutter Edit',
     src: goldenGod,
   },
   {
     title: 'The Snapped Link',
-    desc: 'Sound: Lush, pulsing, ambient with evolving layers\nInstrumentation: Arturia Prophet V, Diva bass, XO drum sampler, Output Portal, Omnisphere',
     src: inevitableCycle,
   },
 ];
 
+const routeTitles = {
+  '/': 'Benjamin Nashel',
+  '/about': 'About Me — Benjamin Nashel',
+  '/movies-books': 'Movies & Books — Benjamin Nashel',
+  '/art': 'Art — Benjamin Nashel',
+  '/music': 'Music — Benjamin Nashel',
+};
+
+function RouteEffects() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    document.title = routeTitles[pathname] || 'Page not found — Benjamin Nashel';
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+
 function AppContent() {
   return (
     <>
+      <RouteEffects />
       <div className="fixed-header">
         <div className="header-spacer"></div>
-        <div className="header-nav-center">
-          <Link to="/">Home</Link>
-          <Link to="/about">About Me</Link>
-          <Link to="/movies-books">Movies & Books</Link>
-          <Link to="/art">Art</Link>
-          <Link to="/music">Music</Link>
-        </div>
+        <nav className="header-nav-center" aria-label="Main">
+          <NavLink to="/">Home</NavLink>
+          <NavLink to="/about">About Me</NavLink>
+          <NavLink to="/movies-books">Movies & Books</NavLink>
+          <NavLink to="/art">Art</NavLink>
+          <NavLink to="/music">Music</NavLink>
+        </nav>
         <div className="header-right">
           <ThemeToggle />
         </div>
       </div>
-      <div className="content fade-in">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/art" element={<Art />} />
-          <Route path="/music" element={<Music tracks={tracks} />} />
-          <Route path="/movies-books" element={<MoviesBooks />} />
-        </Routes>
-      </div>
+      <main className="content fade-in">
+        <Suspense fallback={null}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/art" element={<Art />} />
+            <Route path="/music" element={<Music tracks={tracks} />} />
+            <Route path="/movies-books" element={<MoviesBooks />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </main>
     </>
   );
 }
@@ -84,4 +104,4 @@ export default function App() {
       </Router>
     </ThemeProvider>
   );
-} 
+}

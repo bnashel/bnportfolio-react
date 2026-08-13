@@ -23,7 +23,9 @@ const SimpleBackground = () => {
       )
     `;
     container.style.backgroundSize = '20px 20px';
-    container.style.animation = 'simpleBackgroundMove 20s linear infinite';
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      container.style.animation = 'simpleBackgroundMove 20s linear infinite';
+    }
   }, []);
 
   return (

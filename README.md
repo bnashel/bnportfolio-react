@@ -1,12 +1,28 @@
-# React + Vite
+# benjaminnashel.com
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Personal portfolio site for Benjamin Nashel — about, art, music, and movies/books pages, with a three.js background and a Matter.js physics title on the home page.
 
-Currently, two official plugins are available:
+Live at [www.benjaminnashel.com](https://www.benjaminnashel.com), deployed on Vercel.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Stack
 
-## Expanding the ESLint configuration
+- [Vite](https://vitejs.dev/) + [React](https://react.dev/) (plain JavaScript)
+- [react-router-dom](https://reactrouter.com/) for routing
+- [three.js](https://threejs.org/) for the animated background
+- [Matter.js](https://brm.io/matter-js/) for the physics-driven title
+- [next-themes](https://github.com/pacocoursey/next-themes) for dark mode
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Development
+
+```sh
+npm install
+npm run dev
+```
+
+## Build
+
+```sh
+npm run build
+```
+
+Output goes to `dist/`. Vercel serves it as a single-page app (see `vercel.json`).

@@ -1,7 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
-import { useTheme } from 'next-themes';
 import * as THREE from 'three';
 import { createNoise4D } from 'simplex-noise';
+import envPx from '../assets/envmap/px.jpg';
+import envNx from '../assets/envmap/nx.jpg';
+import envPy from '../assets/envmap/py.jpg';
+import envNy from '../assets/envmap/ny.jpg';
+import envPz from '../assets/envmap/pz.jpg';
+import envNz from '../assets/envmap/nz.jpg';
+
+// Shared GLSL used by multiple shader materials
+const NOISE_GLSL = `
+  float noise(vec3 p) {
+    return fract(sin(dot(p, vec3(12.9898, 78.233, 45.543))) * 43758.5453);
+  }
+`;
 
 const BackgroundAnimation = () => {
   const containerRef = useRef(null);
@@ -10,50 +22,37 @@ const BackgroundAnimation = () => {
   const sceneRef = useRef(null);
   const meshRef = useRef(null);
   const animationFrameRef = useRef(null);
-  const mouseRef = useRef(new THREE.Vector2());
-  const isHoveringRef = useRef(false);
-  const pulseTimeRef = useRef(0);
-  const rotationVelocityRef = useRef({ x: 0, y: 0 });
   const lastTimeRef = useRef(0);
   const excitedRef = useRef(false);
   const excitementTargetRef = useRef(0);
   const excitementLevelRef = useRef(0);
   const [error, setError] = useState(null);
-  
-  // Get current theme
-  const { theme } = useTheme();
-
-  // Error boundary component
-  if (error) {
-    return <div className="error-message">Animation failed to load. Please refresh the page.</div>;
-  }
 
   useEffect(() => {
-    console.log('BackgroundAnimation useEffect started');
+    const container = containerRef.current;
+    let cancelled = false;
     let cleanupFunctions = [];
-    
+    let activeMesh = null;
+    let activeEnvMap = null;
+
     // Ensure clean slate (important for React StrictMode)
-    if (containerRef.current && containerRef.current.children.length > 0) {
-      console.log('Clearing existing canvas elements');
-      Array.from(containerRef.current.children).forEach(child => {
-        containerRef.current.removeChild(child);
+    if (container && container.children.length > 0) {
+      Array.from(container.children).forEach(child => {
+        container.removeChild(child);
       });
     }
 
     try {
       // Initialize Three.js scene
       const initScene = () => {
-        console.log('Initializing scene...');
-        if (!containerRef.current) {
-          console.error('Container ref is null');
+        if (!container) {
           return null;
         }
-        const width = containerRef.current.offsetWidth;
-        const height = containerRef.current.offsetHeight;
-        console.log('Container dimensions:', width, height);
+        const width = container.offsetWidth;
+        const height = container.offsetHeight;
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setClearColor(0xf5f0e6, 0);
-        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(width, height);
         renderer.domElement.style.width = '100%';
         renderer.domElement.style.height = '100%';
@@ -61,7 +60,7 @@ const BackgroundAnimation = () => {
         renderer.domElement.style.top = '0';
         renderer.domElement.style.left = '0';
         renderer.domElement.style.pointerEvents = 'auto';
-        containerRef.current.appendChild(renderer.domElement);
+        container.appendChild(renderer.domElement);
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
         camera.position.z = 28;
@@ -69,32 +68,30 @@ const BackgroundAnimation = () => {
         rendererRef.current = renderer;
         cameraRef.current = camera;
         sceneRef.current = scene;
-        console.log('Scene, camera, renderer initialized');
         return { scene, camera, renderer };
       };
 
       // Create torus with cycling shader effects
       const createTorusWithShaders = () => {
-        console.log('Creating torus with cycling shaders...');
-        
         const createGeometry = () => {
           // Reduce geometry complexity on mobile devices
           const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
           const radialSegments = isMobile ? 32 : 64;
           const tubularSegments = isMobile ? 64 : 128;
-          
+
           const geometry = new THREE.TorusGeometry(2.5, 0.5, radialSegments, tubularSegments);
           const vertexCount = geometry.attributes.position.count;
           const initialPositions = new Float32Array(geometry.attributes.position.array);
           const colors = new Float32Array(vertexCount * 3);
-          
+          const vertexColor = new THREE.Color();
+
           for (let i = 0; i < vertexCount; i++) {
             const y = initialPositions[i * 3 + 1];
             const hue = 0.6 + 0.2 * (y + 2) / 4;
-            const color = new THREE.Color().setHSL(hue % 1, 1.0, 0.7);
-            colors.set([color.r, color.g, color.b], i * 3);
+            vertexColor.setHSL(hue % 1, 1.0, 0.7);
+            colors.set([vertexColor.r, vertexColor.g, vertexColor.b], i * 3);
           }
-          
+
           geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
           geometry.attributes.color.needsUpdate = true;
           geometry.userData = { initialPositions, colors };
@@ -122,7 +119,7 @@ const BackgroundAnimation = () => {
                 envMapIntensity: 1.5
               })
             },
-            
+
             // 1. Molten Lava
             {
               name: "Molten Lava",
@@ -133,7 +130,7 @@ const BackgroundAnimation = () => {
                 vertexShader: `
                   varying vec3 vPosition;
                   varying vec3 vNormal;
-                  
+
                   void main() {
                     vPosition = position;
                     vNormal = normal;
@@ -144,30 +141,28 @@ const BackgroundAnimation = () => {
                   uniform float time;
                   varying vec3 vPosition;
                   varying vec3 vNormal;
-                  
-                  float noise(vec3 p) {
-                    return fract(sin(dot(p, vec3(12.9898, 78.233, 45.543))) * 43758.5453);
-                  }
-                  
+
+                  ${NOISE_GLSL}
+
                   void main() {
                     vec3 p = vPosition * 2.0 + time * 0.5;
                     float n = noise(p) * 0.5 + noise(p * 2.0) * 0.25 + noise(p * 4.0) * 0.125;
-                    
+
                     float heat = sin(vPosition.y * 5.0 + time * 2.0 + n * 3.0) * 0.5 + 0.5;
-                    
+
                     vec3 cold = vec3(0.8, 0.1, 0.0); // Dark red
                     vec3 hot = vec3(1.0, 0.8, 0.2);  // Bright yellow
                     vec3 color = mix(cold, hot, heat);
-                    
+
                     // Add some emissive glow
                     color += vec3(0.3, 0.1, 0.0) * heat;
-                    
+
                     gl_FragColor = vec4(color, 1.0);
                   }
                 `
               })
             },
-            
+
             // 2. Digital Matrix
             {
               name: "Digital Matrix",
@@ -179,7 +174,7 @@ const BackgroundAnimation = () => {
                   varying vec3 vPosition;
                   varying vec3 vNormal;
                   varying vec3 vWorldPosition;
-                  
+
                   void main() {
                     vPosition = position;
                     vNormal = normal;
@@ -193,32 +188,32 @@ const BackgroundAnimation = () => {
                   varying vec3 vPosition;
                   varying vec3 vNormal;
                   varying vec3 vWorldPosition;
-                  
+
                   void main() {
                     // Create grid pattern
                     vec3 p = vWorldPosition * 4.0;
                     vec3 grid = abs(fract(p) - 0.5) / fwidth(p);
                     float lineWidth = min(min(grid.x, grid.y), grid.z);
                     float gridMask = 1.0 - min(lineWidth, 1.0);
-                    
+
                     // Digital rain effect
                     float rain = fract(sin(floor(p.x) * 123.456 + floor(p.z) * 789.012) * 43758.5453);
                     rain = smoothstep(0.8, 1.0, rain);
                     float rainAnim = fract(time * 2.0 + rain * 10.0);
                     rainAnim = smoothstep(0.0, 0.2, rainAnim) * (1.0 - smoothstep(0.8, 1.0, rainAnim));
-                    
+
                     vec3 color = vec3(0.0, 1.0, 0.3) * gridMask; // Green wireframe
                     color += vec3(0.0, 1.0, 0.8) * rainAnim * rain; // Cyan rain
-                    
+
                     // Add some base glow
                     color += vec3(0.0, 0.3, 0.1) * 0.3;
-                    
+
                     gl_FragColor = vec4(color, 1.0);
                   }
                 `
               })
             },
-            
+
             // 3. Liquid Gold
             {
               name: "Liquid Gold",
@@ -231,7 +226,7 @@ const BackgroundAnimation = () => {
                   varying vec3 vNormal;
                   varying vec3 vPosition;
                   varying vec3 vViewDirection;
-                  
+
                   void main() {
                     vNormal = normalize(normalMatrix * normal);
                     vPosition = position;
@@ -246,84 +241,75 @@ const BackgroundAnimation = () => {
                   varying vec3 vNormal;
                   varying vec3 vPosition;
                   varying vec3 vViewDirection;
-                  
-                  float noise(vec3 p) {
-                    return fract(sin(dot(p, vec3(12.9898, 78.233, 45.543))) * 43758.5453);
-                  }
-                  
+
+                  ${NOISE_GLSL}
+
                   void main() {
                     // Flowing liquid effect
                     vec3 p = vPosition * 3.0 + time * 0.2;
                     float flow = noise(p) * 0.5 + noise(p * 2.0) * 0.25;
-                    
+
                     // Gold color gradient
                     vec3 darkGold = vec3(0.8, 0.5, 0.1);
                     vec3 brightGold = vec3(1.0, 0.9, 0.3);
                     vec3 goldColor = mix(darkGold, brightGold, flow);
-                    
+
                     // Fresnel for metallic look
                     float fresnel = pow(1.0 - dot(vViewDirection, vNormal), 2.0);
-                    
+
                     // Environment reflection
                     vec3 reflectVec = reflect(-vViewDirection, vNormal);
                     vec3 envColor = textureCube(envMap, reflectVec).rgb;
-                    
+
                     // Combine everything
                     vec3 color = mix(goldColor, envColor * goldColor, fresnel * 0.8);
-                    
+
                     // Add some extra shine
                     color += vec3(1.0, 0.9, 0.6) * pow(fresnel, 4.0) * 0.3;
-                    
+
                     gl_FragColor = vec4(color, 1.0);
                   }
                 `
               })
             }
           ];
-          
+
           return materials;
         };
 
-        const envMapUrls = [
-          'https://threejs.org/examples/textures/cube/Bridge2/posx.jpg',
-          'https://threejs.org/examples/textures/cube/Bridge2/negx.jpg',
-          'https://threejs.org/examples/textures/cube/Bridge2/posy.jpg',
-          'https://threejs.org/examples/textures/cube/Bridge2/negy.jpg',
-          'https://threejs.org/examples/textures/cube/Bridge2/posz.jpg',
-          'https://threejs.org/examples/textures/cube/Bridge2/negz.jpg',
-        ];
-        
+        const envMapFaces = [envPx, envNx, envPy, envNy, envPz, envNz];
+
         return new Promise((resolve) => {
-          console.log('Loading environment map...');
-          new THREE.CubeTextureLoader().load(envMapUrls, (envMap) => {
-            console.log('Environment map loaded');
-            
+          const buildTorus = (envMap) => {
             const shaderMaterials = createShaderMaterials(envMap);
-            
+
             // Create torus with first shader (Crystal Glass)
             const geometry = createGeometry();
             const initialIndex = 0; // Always start with Crystal Glass
             const mesh = new THREE.Mesh(geometry, shaderMaterials[initialIndex].material);
             mesh.position.y = 6.0;
-            
+
             // Store references for cycling
-            mesh.userData = { 
+            mesh.userData = {
               shaderMaterials,
               currentShaderIndex: initialIndex,
               lastShaderChange: 0
             };
-            meshRef.current = mesh;
-            
-            console.log('Torus with cycling shaders created');
-            
-            resolve(mesh);
-          });
+
+            resolve({ mesh, envMap });
+          };
+
+          new THREE.CubeTextureLoader().load(
+            envMapFaces,
+            (envMap) => buildTorus(envMap),
+            undefined,
+            () => buildTorus(null)
+          );
         });
       };
 
       // Set up lighting
       const setupLights = (scene) => {
-        console.log('Setting up lights');
         const lights = [
           { color: 0xff00ff, intensity: 2.5, position: [4, 4, 6] },
           { color: 0x00ffff, intensity: 2.5, position: [-4, -4, 6] },
@@ -343,12 +329,10 @@ const BackgroundAnimation = () => {
 
         const ambient = new THREE.AmbientLight(0xffffff, 1.5);
         scene.add(ambient);
-        console.log('Lights setup complete');
       };
 
       // Animation loop for torus
       const animate = (mesh, scene, camera, renderer) => {
-        console.log('Starting animation loop...');
         let dragDeformStrength = 0;
         let dragMouse = { x: 0, y: 0 };
         let dragActive = false;
@@ -357,9 +341,13 @@ const BackgroundAnimation = () => {
         const colors = geometry.userData.colors;
         const simplex = createNoise4D();
         const raycaster = new THREE.Raycaster();
+        const frameColor = new THREE.Color();
+        const dragVertex = new THREE.Vector3();
+        const clickPointer = new THREE.Vector2();
         let breathScale = 1;
         let targetBreathScale = 1;
         let breathTimeout = null;
+        let normalsElapsed = 0;
 
         // Calculate optimal camera distance
         const calculateOptimalCameraDistance = () => {
@@ -379,12 +367,12 @@ const BackgroundAnimation = () => {
           const deltaTime = (time - lastTimeRef.current) / 1000;
           lastTimeRef.current = time;
 
-                    // Handle shader cycling (all shaders available)
+          // Handle shader cycling (all shaders available)
           const shaderCycleInterval = 4000; // 4 seconds per shader
           if (mesh.userData && mesh.userData.shaderMaterials) {
             const userData = mesh.userData;
             const timeSinceLastChange = time - userData.lastShaderChange;
-            
+
             // Cycle through all shaders regardless of theme
             if (timeSinceLastChange > shaderCycleInterval) {
               // Cycle to next shader (all 4 shaders available)
@@ -392,7 +380,6 @@ const BackgroundAnimation = () => {
               const newMaterial = userData.shaderMaterials[userData.currentShaderIndex];
               mesh.material = newMaterial.material;
               userData.lastShaderChange = time;
-              console.log(`Switched to shader: ${newMaterial.name}`);
             }
           }
 
@@ -411,17 +398,17 @@ const BackgroundAnimation = () => {
           for (let i = 0; i < colors.length; i += 3) {
             const y = initialPositions[i];
             const z = initialPositions[i + 2];
-            
+
             // Single unified color scheme with smooth gradient
             const baseHue = 0.6; // Blue-green base
             const timeOffset = Math.sin(t * 0.5) * 0.2;
             const excitementOffset = Math.sin(t * 2) * 0.2 * excitementLevel;
             const spatialOffset = Math.sin(y * 0.5 + z * 0.3) * 0.1;
             const hue = (baseHue + 0.2 * (y + 2) / 4 + timeOffset + excitementOffset + spatialOffset) % 1;
-            const color = new THREE.Color().setHSL(hue, 1.0, 0.7);
-            colorArray[i] = color.r;
-            colorArray[i + 1] = color.g;
-            colorArray[i + 2] = color.b;
+            frameColor.setHSL(hue, 1.0, 0.7);
+            colorArray[i] = frameColor.r;
+            colorArray[i + 1] = frameColor.g;
+            colorArray[i + 2] = frameColor.b;
           }
 
           // Organic blob deformation
@@ -430,21 +417,21 @@ const BackgroundAnimation = () => {
             const ox = initialPositions[i * 3];
             const oy = initialPositions[i * 3 + 1];
             const oz = initialPositions[i * 3 + 2];
-            
+
             let scale = 1 + 0.18 * simplex(ox * 0.7, oy * 0.7, oz * 0.7, t);
-            
+
             if (excitementLevel > 0) {
               const excitementNoise = simplex(ox * 1.2, oy * 1.2, oz * 1.2, t * 2) * 0.3 * excitementLevel;
               scale += excitementNoise;
             }
 
             if (dragActive) {
-              const vertex = new THREE.Vector3(ox, oy, oz);
-              vertex.applyMatrix4(mesh.matrixWorld);
-              vertex.project(camera);
+              dragVertex.set(ox, oy, oz);
+              dragVertex.applyMatrix4(mesh.matrixWorld);
+              dragVertex.project(camera);
               const dist = Math.sqrt(
-                Math.pow(vertex.x - dragMouse.x, 2) +
-                Math.pow(vertex.y - dragMouse.y, 2)
+                Math.pow(dragVertex.x - dragMouse.x, 2) +
+                Math.pow(dragVertex.y - dragMouse.y, 2)
               );
               if (dist < 0.3) {
                 scale += (0.4 - dist) * dragDeformStrength;
@@ -475,18 +462,24 @@ const BackgroundAnimation = () => {
             const baseRotationSpeed = 0.01;
             const excitementRotationSpeed = 0.02;
             const timeSec = time * 0.001;
-            
+
             // Add noise-based rotation variation
             const noiseX = simplex(timeSec * 0.5, 0, 0, 0) * 0.02;
             const noiseY = simplex(0, timeSec * 0.5, 0, 0) * 0.02;
-            
+
             mesh.rotation.x += baseRotationSpeed + excitementRotationSpeed * excitementLevel + noiseX;
             mesh.rotation.y += baseRotationSpeed * 0.5 + excitementRotationSpeed * 0.5 * excitementLevel + noiseY;
           }
 
           positions.needsUpdate = true;
           geometry.attributes.color.needsUpdate = true;
-          geometry.computeVertexNormals();
+
+          // Positions deform every frame; recompute normals at most ~30 times per second
+          normalsElapsed += deltaTime;
+          if (normalsElapsed >= 1 / 30) {
+            geometry.computeVertexNormals();
+            normalsElapsed = 0;
+          }
 
           renderer.render(scene, camera);
           animationFrameRef.current = requestAnimationFrame(animateFrame);
@@ -530,8 +523,8 @@ const BackgroundAnimation = () => {
         const handleClick = (e) => {
           e.preventDefault();
           const coords = getEventCoordinates(e);
-          const mouse = new THREE.Vector2(coords.x, coords.y);
-          raycaster.setFromCamera(mouse, camera);
+          clickPointer.set(coords.x, coords.y);
+          raycaster.setFromCamera(clickPointer, camera);
           const intersects = raycaster.intersectObject(mesh);
           if (intersects.length > 0) {
             excitedRef.current = !excitedRef.current;
@@ -566,13 +559,13 @@ const BackgroundAnimation = () => {
           window.removeEventListener('mouseup', handleEnd);
           renderer.domElement.removeEventListener('click', handleClick);
           window.removeEventListener('mouseleave', handleEnd);
-          
+
           // Remove touch event listeners
           renderer.domElement.removeEventListener('touchstart', handleStart);
           renderer.domElement.removeEventListener('touchmove', handleMove);
           renderer.domElement.removeEventListener('touchend', handleEnd);
           renderer.domElement.removeEventListener('touchcancel', handleEnd);
-          
+
           if (breathTimeout) clearTimeout(breathTimeout);
           if (animationFrameRef.current) {
             cancelAnimationFrame(animationFrameRef.current);
@@ -583,9 +576,9 @@ const BackgroundAnimation = () => {
       // Handle container resize
       const handleResize = (camera, renderer) => {
         const resize = () => {
-          if (!containerRef.current) return;
-          const width = containerRef.current.offsetWidth;
-          const height = containerRef.current.offsetHeight;
+          if (!container) return;
+          const width = container.offsetWidth;
+          const height = container.offsetHeight;
           camera.aspect = width / height;
           camera.updateProjectionMatrix();
           renderer.setSize(width, height, false);
@@ -595,7 +588,7 @@ const BackgroundAnimation = () => {
 
         resize();
         const observer = new window.ResizeObserver(resize);
-        observer.observe(containerRef.current);
+        observer.observe(container);
         window.addEventListener('resize', resize);
 
         return () => {
@@ -605,16 +598,24 @@ const BackgroundAnimation = () => {
       };
 
       // Initialize animation
-      console.log('Starting animation initialization...');
-      const { scene, camera, renderer } = initScene();
-      if (!scene || !camera || !renderer) {
-        console.error('Failed to initialize scene components');
+      const context = initScene();
+      if (!context) {
         return;
       }
+      const { scene, camera, renderer } = context;
 
-      createTorusWithShaders().then((mesh) => {
-        console.log('Torus created, adding to scene...');
-        
+      createTorusWithShaders().then(({ mesh, envMap }) => {
+        if (cancelled) {
+          mesh.geometry.dispose();
+          mesh.userData.shaderMaterials.forEach(({ material }) => material.dispose());
+          if (envMap) envMap.dispose();
+          return;
+        }
+
+        activeMesh = mesh;
+        activeEnvMap = envMap;
+        meshRef.current = mesh;
+
         // Clear any existing meshes from the scene
         const objectsToRemove = [];
         scene.traverse((child) => {
@@ -627,34 +628,41 @@ const BackgroundAnimation = () => {
           if (obj.geometry) obj.geometry.dispose();
           if (obj.material) obj.material.dispose();
         });
-        
+
         scene.add(mesh);
         setupLights(scene);
         const cleanupAnimation = animate(mesh, scene, camera, renderer);
         const cleanupResize = handleResize(camera, renderer);
         cleanupFunctions.push(cleanupAnimation, cleanupResize);
-      }).catch(error => {
-        console.error('Error in animation setup:', error);
+      }).catch(err => {
+        if (!cancelled) setError(err);
       });
 
     } catch (error) {
-      console.error('Error in animation initialization:', error);
       setError(error);
     }
 
     // Cleanup function
     return () => {
-      console.log('Cleaning up animation');
-      
+      cancelled = true;
+
       // Cancel animation frame
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
         animationFrameRef.current = null;
       }
-      
+
       // Run all cleanup functions
       cleanupFunctions.forEach(cleanup => cleanup && cleanup());
-      
+
+      // Dispose every cycling shader material and the environment map texture
+      if (activeMesh && activeMesh.userData.shaderMaterials) {
+        activeMesh.userData.shaderMaterials.forEach(({ material }) => material.dispose());
+      }
+      if (activeEnvMap) {
+        activeEnvMap.dispose();
+      }
+
       // Clear and dispose of scene objects
       if (sceneRef.current) {
         sceneRef.current.traverse((child) => {
@@ -670,44 +678,32 @@ const BackgroundAnimation = () => {
         sceneRef.current.clear();
         sceneRef.current = null;
       }
-      
+
       // Remove canvas and dispose renderer
-      if (containerRef.current && rendererRef.current?.domElement) {
+      if (container && rendererRef.current?.domElement) {
         try {
-          containerRef.current.removeChild(rendererRef.current.domElement);
-        } catch (e) {
-          console.log('Canvas already removed');
+          container.removeChild(rendererRef.current.domElement);
+        } catch {
+          // Canvas already removed
         }
       }
-      
+
       if (rendererRef.current) {
         rendererRef.current.dispose();
         rendererRef.current = null;
       }
-      
+
       // Clear refs
       meshRef.current = null;
       cameraRef.current = null;
     };
   }, []);
 
-  return (
-    <div 
-      ref={containerRef} 
-      id="animation-bg" 
-      style={{ 
-        width: '100vw', 
-        height: '100vh', 
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        overflow: 'hidden',
-        backgroundColor: 'transparent',
-        zIndex: -1,
-        pointerEvents: 'auto'
-      }} 
-    />
-  );
+  if (error) {
+    return <div className="error-message">Animation failed to load. Please refresh the page.</div>;
+  }
+
+  return <div ref={containerRef} id="animation-bg" />;
 };
 
-export default BackgroundAnimation; 
+export default BackgroundAnimation;
